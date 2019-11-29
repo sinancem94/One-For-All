@@ -5,7 +5,7 @@ using UnityEngine;
 public class LevelCreator : MonoBehaviour
 {
     DataManager dataManager;
-    void Start()
+    void Awake()
     {
         dataManager = new DataManager();
 
