@@ -6,21 +6,21 @@ using UtmostInput;
 public class GangMovementScript : MonoBehaviour
 {
     private List<Animator> gangAnimators;
-    private List<Transform> gangTransforms;
+    public List<Transform> gangTransforms;
     Vector2 initialPos;
 
     InputX inputX;
 
     private void Start()
     {
-        DataScript.inputLock = false;
+        
         inputX = new InputX();
         initialPos = new Vector2();
         gangAnimators = new List<Animator>();
         gangTransforms = new List<Transform>();
 
         SetGangList();
-        StartCoroutine(CreateLadder(5,3,gangTransforms[0]));
+        //StartCoroutine(CreateLadder(5,3,gangTransforms[0]));
 
     }
 
@@ -82,13 +82,21 @@ public class GangMovementScript : MonoBehaviour
     //ladderlength is the length of the ladder which is decided by the member count to create the ladder
     //diffBtwLadderMembers is the how much should ladder increase in y direction which each step, difference between each one of the ladder members
     //as the firstMemberOfLadder we should send the first collided member of the gang to start creating ladder at its position
-    public IEnumerator CreateLadder(int ladderLength, int diffBtwLadderMembers, Transform firstMemberOfLadder)
+    public IEnumerator CreateLadder(int ladderLength, int diffBtwLadderMembers, Transform firstMemberOfLadder, Transform lookPosition)
     {
+        
+
         DataScript.inputLock = true;
         Vector3 ladderPos;
         Vector3 ladderStartPos = firstMemberOfLadder.position;
         ladderStartPos.z -= 2f;     //change it do dynamic
         ladderPos = firstMemberOfLadder.position;
+
+        foreach (Animator gangMemberAnim in gangAnimators)
+        {
+
+            gangMemberAnim.SetBool("isWalking", false);
+        }
 
         firstMemberOfLadder.gameObject.GetComponent<Animator>().SetBool("isClimbing", true);
         firstMemberOfLadder.gameObject.GetComponent<Animator>().SetBool("isClimbFinished", true);
@@ -107,12 +115,12 @@ public class GangMovementScript : MonoBehaviour
             gangTransforms[i].gameObject.GetComponent<Animator>().SetBool("isWalking", true);
             while (Vector3.SqrMagnitude(gangTransforms[i].position - ladderStartPos) > 0.5f)
             {
-                gangTransforms[i].position = Vector3.MoveTowards(gangTransforms[i].position, ladderStartPos, 2f);
-                yield return new WaitForSecondsRealtime(0.1f);
+                gangTransforms[i].position = Vector3.MoveTowards(gangTransforms[i].position, ladderStartPos, 0.5f);
+                yield return new WaitForSecondsRealtime(0.02f);
             }
 
             //climb member to its corresponding ladder position
-            gangTransforms[i].rotation = Quaternion.identity;        //change it to dynamic
+            gangTransforms[i].LookAt(lookPosition);  //change it to dynamic
             gangTransforms[i].gameObject.GetComponent<Animator>().SetBool("isWalking", false);
             gangTransforms[i].gameObject.GetComponent<Animator>().SetBool("isClimbing", true);
             while (Vector3.SqrMagnitude(gangTransforms[i].position - ladderPos) > 0.5f)
@@ -148,7 +156,7 @@ public class GangMovementScript : MonoBehaviour
             }
 
             //climb member to the top of the ladder
-            gangTransforms[i].rotation = Quaternion.identity;        //change it to dynamic
+            gangTransforms[i].LookAt(lookPosition);        //change it to dynamic
             gangTransforms[i].gameObject.GetComponent<Animator>().SetBool("isWalking", false);
             gangTransforms[i].gameObject.GetComponent<Animator>().SetBool("isClimbing", true);
             while (Vector3.SqrMagnitude(gangTransforms[i].position - ladderPos) > 0.5f)
@@ -171,6 +179,7 @@ public class GangMovementScript : MonoBehaviour
             gangTransforms[i].gameObject.GetComponent<Animator>().SetBool("isWalking", false);
         }
         DataScript.inputLock = false;
+        DataScript.memberCollisionLock = false;
     }
 
     public void SetGangList()

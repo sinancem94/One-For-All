@@ -8,7 +8,8 @@ public class LevelCreator : MonoBehaviour
     void Awake()
     {
         dataManager = new DataManager();
-
+        DataScript.memberCollisionLock = false;
+        DataScript.inputLock = false;
 
     }
 
