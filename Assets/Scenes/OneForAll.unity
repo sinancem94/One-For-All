@@ -387,7 +387,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1907456879}
   m_LocalRotation: {x: 0.2712724, y: 0, z: 0, w: 0.96250266}
-  m_LocalPosition: {x: 0, y: 116.6, z: -99.9}
+  m_LocalPosition: {x: 0, y: 116.6, z: -147.58}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -462,6 +462,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: LadderObstacle
+      objectReference: {fileID: 0}
+    - target: {fileID: 1896910793365286876, guid: 4a842f0c2ea7c3f4d9a92bed511fc935,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5719670626224778960, guid: 4a842f0c2ea7c3f4d9a92bed511fc935,
         type: 3}
@@ -538,8 +543,8 @@ GameObject:
   - component: {fileID: 2037973404}
   - component: {fileID: 2037973403}
   m_Layer: 0
-  m_Name: Plane
-  m_TagString: Untagged
+  m_Name: Ground
+  m_TagString: Ground
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

@@ -11,6 +11,8 @@ public class GangMovementScript : MonoBehaviour
 
     InputX inputX;
 
+    
+
     private void Start()
     {
         
@@ -79,6 +81,8 @@ public class GangMovementScript : MonoBehaviour
     }
 
 
+    //hepsini kapat bazılarını ac gravity icin
+
     //ladderlength is the length of the ladder which is decided by the member count to create the ladder
     //diffBtwLadderMembers is the how much should ladder increase in y direction which each step, difference between each one of the ladder members
     //as the firstMemberOfLadder we should send the first collided member of the gang to start creating ladder at its position
@@ -87,10 +91,10 @@ public class GangMovementScript : MonoBehaviour
         
 
         DataScript.inputLock = true;
-        Vector3 ladderPos;
+        Vector3 memberPosInLadder;
         Vector3 ladderStartPos = firstMemberOfLadder.position;
         ladderStartPos.z -= 2f;     //change it do dynamic
-        ladderPos = firstMemberOfLadder.position;
+        memberPosInLadder = firstMemberOfLadder.position;
 
         foreach (Animator gangMemberAnim in gangAnimators)
         {
@@ -107,78 +111,24 @@ public class GangMovementScript : MonoBehaviour
         //for creating the ladder
         for (int i = 0; i < ladderLength-1; i++)
         {
-            ladderPos.y = ladderPos.y + diffBtwLadderMembers;
-
-
-            //send member to ladders start position
-            gangTransforms[i].LookAt(ladderStartPos);  
-            gangTransforms[i].gameObject.GetComponent<Animator>().SetBool("isWalking", true);
-            while (Vector3.SqrMagnitude(gangTransforms[i].position - ladderStartPos) > 0.5f)
-            {
-                gangTransforms[i].position = Vector3.MoveTowards(gangTransforms[i].position, ladderStartPos, 0.5f);
-                yield return new WaitForSecondsRealtime(0.02f);
-            }
-
-            //climb member to its corresponding ladder position
-            gangTransforms[i].LookAt(lookPosition);  //change it to dynamic
-            gangTransforms[i].gameObject.GetComponent<Animator>().SetBool("isWalking", false);
-            gangTransforms[i].gameObject.GetComponent<Animator>().SetBool("isClimbing", true);
-            while (Vector3.SqrMagnitude(gangTransforms[i].position - ladderPos) > 0.5f)
-            {
-                gangTransforms[i].position = Vector3.MoveTowards(gangTransforms[i].position, ladderPos, 1f);
-                yield return new WaitForSecondsRealtime(0.1f);
-            }
-
-            //set the after climb position of the member
-            gangTransforms[i].gameObject.GetComponent<Animator>().SetBool("isClimbing", false);
-            gangTransforms[i].gameObject.GetComponent<Animator>().SetBool("isClimbFinished", true);
-            gangTransforms[i].parent = null;
+            memberPosInLadder.y = memberPosInLadder.y + diffBtwLadderMembers;
+            StartCoroutine(gangTransforms[i].gameObject.GetComponent<MemberActions>().CreateLadder(true,ladderStartPos,memberPosInLadder,lookPosition));
+            yield return new WaitForSecondsRealtime(0.5f);
         }
 
-        SetGangList();
-        ladderPos.y += diffBtwLadderMembers;
+        //yield return new WaitForSecondsRealtime(2f);        //member actions bitince done tarzı bisey gönderip yapabiliriz. biri bitmeden diğerine baslamasın diye
+        //SetGangList();
+        memberPosInLadder.y += diffBtwLadderMembers;
 
         //for sending rest of the gang to the top of the ladder
-        for(int i = 0; i < gangTransforms.Count; i++)
+        for(int i = ladderLength-1; i < gangTransforms.Count; i++)
         {
-            float randX = Random.Range(-3f, 3f);
-            float randZ = Random.Range(-3f, 3f);
-
-            Vector3 lastPos = new Vector3(ladderPos.x + randX, ladderPos.y, ladderPos.z + randZ);
-
-            //send member to ladders start position
-            gangTransforms[i].LookAt(ladderStartPos);
-            gangTransforms[i].gameObject.GetComponent<Animator>().SetBool("isWalking", true);
-            while (Vector3.SqrMagnitude(gangTransforms[i].position - ladderStartPos) > 0.5f)
-            {
-                gangTransforms[i].position = Vector3.MoveTowards(gangTransforms[i].position, ladderStartPos, 2f);
-                yield return new WaitForSecondsRealtime(0.1f);
-            }
-
-            //climb member to the top of the ladder
-            gangTransforms[i].LookAt(lookPosition);        //change it to dynamic
-            gangTransforms[i].gameObject.GetComponent<Animator>().SetBool("isWalking", false);
-            gangTransforms[i].gameObject.GetComponent<Animator>().SetBool("isClimbing", true);
-            while (Vector3.SqrMagnitude(gangTransforms[i].position - ladderPos) > 0.5f)
-            {
-                gangTransforms[i].position = Vector3.MoveTowards(gangTransforms[i].position, ladderPos, 1f);
-                yield return new WaitForSecondsRealtime(0.1f);
-            }
-
-            //send member to a random location after climbing to prevent them all stay at the same position
-            //this position should be handled more precisely
-            gangTransforms[i].LookAt(lastPos);
-            gangTransforms[i].gameObject.GetComponent<Animator>().SetBool("isClimbing", false);
-            gangTransforms[i].gameObject.GetComponent<Animator>().SetBool("isWalking", true);
-            while (Vector3.SqrMagnitude(gangTransforms[i].position - lastPos) > 0.5f)
-            {
-                gangTransforms[i].position = Vector3.MoveTowards(gangTransforms[i].position, lastPos, 2f);
-                yield return new WaitForSecondsRealtime(0.1f);
-            }
-
-            gangTransforms[i].gameObject.GetComponent<Animator>().SetBool("isWalking", false);
+            StartCoroutine(gangTransforms[i].gameObject.GetComponent<MemberActions>().CreateLadder(false, ladderStartPos, memberPosInLadder, lookPosition));
+            yield return new WaitForSecondsRealtime(0.5f);
         }
+        yield return new WaitForSecondsRealtime(1f);        //member actions bitince done tarzı bisey gönderip yapabiliriz. biri bitmeden diğerine baslamasın diye
         DataScript.inputLock = false;
+        SetGangList();
         DataScript.memberCollisionLock = false;
     }
 
