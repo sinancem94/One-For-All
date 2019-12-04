@@ -20,6 +20,7 @@ public class MemberActions : MonoBehaviour
 
     public IEnumerator CreateLadder(bool isPartOfTheLadder, Vector3 ladderStartPos, Vector3 memberPosInLadder, Transform lookPosition)
     {
+        DataScript.isGravityOpen = false;
         if (isPartOfTheLadder)
         {
             //send member to ladders start position
@@ -48,8 +49,8 @@ public class MemberActions : MonoBehaviour
         }
         else
         {
-            float randX = Random.Range(-3f, 3f);
-            float randZ = Random.Range(-3f, 3f);
+            float randX = Random.Range(-5f, 5f);
+            float randZ = Random.Range(2f, 10f);
 
             Vector3 lastPos = new Vector3(memberPosInLadder.x + randX, memberPosInLadder.y, memberPosInLadder.z + randZ);
 
@@ -84,7 +85,7 @@ public class MemberActions : MonoBehaviour
             }
 
             animator.SetBool("isWalking", false);
-
+            GetComponent<Rigidbody>().useGravity = true;
         }
 
         StopCoroutine(CreateLadder(isPartOfTheLadder, ladderStartPos, memberPosInLadder, lookPosition));

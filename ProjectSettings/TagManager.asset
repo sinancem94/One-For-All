@@ -8,6 +8,7 @@ TagManager:
   - LadderObstacle
   - UsedObject
   - Ground
+  - WreckingBall
   layers:
   - Default
   - TransparentFX
@@ -19,7 +20,7 @@ TagManager:
   - 
   - Gang Member
   - Used Object
-  - 
+  - Wrecking Ball
   - 
   - 
   - 
