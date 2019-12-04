@@ -22,11 +22,9 @@ public class GangMovementScript : MonoBehaviour
         gangTransforms = new List<Transform>();
 
         SetGangList();
-        //StartCoroutine(CreateLadder(5,3,gangTransforms[0]));
-
     }
 
-    void Update()
+ /*   void Update()
     {
         if (inputX.IsInput() && !DataScript.inputLock)
         {
@@ -41,7 +39,7 @@ public class GangMovementScript : MonoBehaviour
                 gangMemberAnim.SetBool("isWalking", false);
             }
         }
-    }
+    }*/
 
     public void MoveTheGang(GeneralInput input)
     {
@@ -53,8 +51,7 @@ public class GangMovementScript : MonoBehaviour
         {
             
             foreach (Animator gangMemberAnim in gangAnimators)
-            {
-               
+            { 
                 gangMemberAnim.SetBool("isWalking", true);
             }
 
@@ -62,8 +59,6 @@ public class GangMovementScript : MonoBehaviour
             Vector2 diffVec = toPos - initialPos;
             
             //transform.rotation = Quaternion.identity;
-
-
             Vector3 posVec = transform.position;
             posVec.x += diffVec.x;
             posVec.z += diffVec.y;
