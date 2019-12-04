@@ -10,6 +10,7 @@ public class LevelCreator : MonoBehaviour
         dataManager = new DataManager();
         DataScript.memberCollisionLock = false;
         DataScript.inputLock = false;
+        DataScript.isGravityOpen = true;
 
     }
 

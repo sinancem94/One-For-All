@@ -7,6 +7,8 @@ public static class DataScript
 
     public static bool inputLock;       //if true input is locked
 
-    public static bool memberCollisionLock;     //if true member collision is locked
+    public static bool memberCollisionLock;     //if true member collision is locked,    unnecessary
+
+    public static bool isGravityOpen;
 
 }
