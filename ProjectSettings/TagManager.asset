@@ -10,6 +10,8 @@ TagManager:
   - Ground
   - WreckingBall
   - Base
+  - FinishLine
+  - BridgeObstacle
   layers:
   - Default
   - TransparentFX
@@ -22,8 +24,8 @@ TagManager:
   - Gang Member
   - Used Object
   - Wrecking Ball
-  - 
-  - 
+  - Finish Line
+  - BridgeObstacle
   - 
   - 
   - 

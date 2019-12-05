@@ -20,11 +20,11 @@ public class WreckingBallScript : MonoBehaviour
     {
         while (true)
         {
+            yield return new WaitForSecondsRealtime(1f);
             if (isTurningRight)
                 isTurningRight = false;
             else
                 isTurningRight = true;
-            yield return new WaitForSecondsRealtime(1f);
         }
       
     }
@@ -35,11 +35,11 @@ public class WreckingBallScript : MonoBehaviour
         {
             if (isTurningRight)
             {
-                transform.Rotate(3f, 0, 0);
+                transform.Rotate(2f, 0, 0);
             }
             else
             {
-                transform.Rotate(-3f, 0, 0);
+                transform.Rotate(-2f, 0, 0);
             }
             
             yield return new WaitForEndOfFrame();

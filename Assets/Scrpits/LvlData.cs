@@ -23,9 +23,11 @@ public class LvlData
             case 1:
             default:
 
-            memberCount = 15;
+            memberCount = 25;
             gangPosition = Vector3.zero;
+
             break;
+
         }
     }
 

@@ -6,9 +6,12 @@ public class Member : MonoBehaviour
 {
     private GangMovementScript gangMovementScript;
 
+    private UIScript uIScript;
+    
     void Start()
     {
         gangMovementScript = FindObjectOfType(typeof(GangMovementScript)) as GangMovementScript;
+        uIScript = FindObjectOfType(typeof(UIScript)) as UIScript;
         CloseRagdollPhysics();
     }
 
@@ -73,10 +76,24 @@ public class Member : MonoBehaviour
             //StartCoroutine(gangMovementScript.CreateLadder(10, (int)transform.lossyScale.y * 3, gangMovementScript.gangTransforms.Find(x => x.transform == transform),other.transform));                                       //gangMovementScript.gangTransforms[6]));                                  
         }*/
 
-        if(other.CompareTag("WreckingBall"))
+
+        if(other.gameObject.tag == "BridgeObstacle" && !DataScript.memberCollisionLock)
+        {
+            DataScript.memberCollisionLock = true;
+            other.gameObject.tag = "UsedObject";
+            StartCoroutine(gangMovementScript.CreateBridge(8, 3, gangMovementScript.gangTransforms.Find(x => x.transform == transform), other.transform));
+        }
+
+        if(other.gameObject.tag == "WreckingBall")
         {
             Debug.Log("wreckk");
             OpenRagdollPhysics();
+        }
+
+        if(other.gameObject.tag == "FinishLine")
+        {
+            uIScript.LevelPassed();
+            Debug.Log("Level Passed");
         }
     }
 

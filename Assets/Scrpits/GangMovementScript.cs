@@ -8,9 +8,14 @@ public class GangMovementScript : MonoBehaviour
     private List<Animator> gangAnimators;
     public List<Transform> gangTransforms;
 
+    private UIScript uIScript;
+    private CameraScript cameraScript;
+
     private void Start()
     {
-        
+        cameraScript = FindObjectOfType(typeof(CameraScript)) as CameraScript;
+        uIScript = FindObjectOfType(typeof(UIScript)) as UIScript;
+
         gangAnimators = new List<Animator>();
         gangTransforms = new List<Transform>();
 
@@ -22,6 +27,7 @@ public class GangMovementScript : MonoBehaviour
 
         if(transform.childCount == 0)
         {
+            uIScript.GameOver();
             Debug.Log("Game Over");
         }
         else
@@ -159,6 +165,64 @@ public class GangMovementScript : MonoBehaviour
         DataScript.isGravityOpen = true;
     }
 
+    public IEnumerator CreateBridge(int bridgeLength, int diffBtwBridgeMembers, Transform firstMemberOfBridge, Transform lookPosition)
+    {
+        DataScript.inputLock = true;
+        Vector3 memberPosInBridge;
+        Vector3 bridgeStartPos = firstMemberOfBridge.position;
+        bridgeStartPos.y += 2f;
+        memberPosInBridge = bridgeStartPos;
+        firstMemberOfBridge.position = bridgeStartPos;
+        bridgeStartPos.z -= 2f;     //change it do dynamic
+        
+
+        foreach (Animator gangMemberAnim in gangAnimators)
+        {
+            gangMemberAnim.SetBool("isWalking", false);
+        }
+
+        
+        Vector3 newLookPos = firstMemberOfBridge.transform.position;
+        newLookPos.y -= 5f;
+        firstMemberOfBridge.LookAt(newLookPos);
+        firstMemberOfBridge.gameObject.GetComponent<Animator>().SetBool("isClimbing", true);
+        firstMemberOfBridge.gameObject.GetComponent<Animator>().SetBool("isClimbFinished", true);
+
+        firstMemberOfBridge.parent = null;
+        SetGangList();
+
+        //for creating the bridge
+        for (int i = 0; i < bridgeLength - 1; i++)
+        {
+            if (i < gangTransforms.Count)
+            {
+                memberPosInBridge.z = memberPosInBridge.z + diffBtwBridgeMembers;
+                StartCoroutine(gangTransforms[i].gameObject.GetComponent<MemberActions>().CreateBridge(true, bridgeStartPos, memberPosInBridge, lookPosition));
+                yield return new WaitForSecondsRealtime(0.5f);
+            }
+        }
+
+        //yield return new WaitForSecondsRealtime(2f);        //member actions bitince done tarzı bisey gönderip yapabiliriz. biri bitmeden diğerine baslamasın diye
+        //SetGangList();
+        memberPosInBridge.z += diffBtwBridgeMembers;
+
+        //for sending rest of the gang to the top of the ladder
+        if (bridgeLength - 1 < gangTransforms.Count)
+        {
+            for (int i = bridgeLength - 1; i < gangTransforms.Count; i++)
+            {
+                StartCoroutine(gangTransforms[i].gameObject.GetComponent<MemberActions>().CreateBridge(false, bridgeStartPos, memberPosInBridge, lookPosition));
+                yield return new WaitForSecondsRealtime(0.5f);
+            }
+        }
+
+        yield return new WaitForSecondsRealtime(3f);        //member actions bitince done tarzı bisey gönderip yapabiliriz. biri bitmeden diğerine baslamasın diye
+        DataScript.inputLock = false;
+        SetGangList();
+        DataScript.memberCollisionLock = false;
+        DataScript.isGravityOpen = true;
+    }
+
     public void SetGangList()
     {
         gangAnimators.Clear();
@@ -170,6 +234,12 @@ public class GangMovementScript : MonoBehaviour
         {
             gangTransforms.Add(firstDepthChildT);
         }
+
+        if(gangTransforms != null)
+        {
+            cameraScript.objectFollowedByCam = gangTransforms[0].gameObject;
+        }
+        
     }
 }
 

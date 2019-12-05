@@ -11,6 +11,7 @@ public class LevelCreator : MonoBehaviour
         DataScript.memberCollisionLock = false;
         DataScript.inputLock = false;
         DataScript.isGravityOpen = true;
+        Time.timeScale = 1f;
 
     }
 
