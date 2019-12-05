@@ -55,22 +55,6 @@ public class Member : MonoBehaviour
         }
     }
 
-    public void JoyStickMovement(Vector2 posDelta)
-    {
-        Vector3 posVec = transform.position;
-        posVec.x += posDelta.x;
-        posVec.z += posDelta.y;
-        transform.position = Vector3.MoveTowards(transform.position, posVec, 0.5f);
-
-        Vector3 lookPos = posVec;
-        lookPos.y = transform.position.y;
-
-        transform.LookAt(lookPos);
-
-     //   Quaternion targetRotation = Quaternion.LookRotation(posVec * 100f);
-       // transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, 35f);
-    }
-
 
     private void OnTriggerEnter(Collider other)
     {
@@ -82,12 +66,12 @@ public class Member : MonoBehaviour
             GetComponent<Rigidbody>().velocity = Vector3.zero;
         }
         
-        if (other.CompareTag("LadderObstacle") && !DataScript.memberCollisionLock)
+        /*if (other.CompareTag("LadderObstacle") && !DataScript.memberCollisionLock)
         {
             DataScript.memberCollisionLock = true;
             other.gameObject.tag = "UsedObject";
-            StartCoroutine(gangMovementScript.CreateLadder(10, (int)transform.lossyScale.y * 3, gangMovementScript.gangTransforms.Find(x => x.transform == transform),other.transform));                                       //gangMovementScript.gangTransforms[6]));                                  
-        }
+            //StartCoroutine(gangMovementScript.CreateLadder(10, (int)transform.lossyScale.y * 3, gangMovementScript.gangTransforms.Find(x => x.transform == transform),other.transform));                                       //gangMovementScript.gangTransforms[6]));                                  
+        }*/
 
         if(other.CompareTag("WreckingBall"))
         {

@@ -79,61 +79,32 @@ public class GangMovementScript : MonoBehaviour
             touchDelta = (gInput.currentPosition - touchStartPos);
             touchStartPos = Vector2.MoveTowards(touchStartPos, gInput.currentPosition, Vector2.Distance(touchStartPos, gInput.currentPosition) / 50f);
 
-            foreach(Member mem in gang.Members)
+            JoyStickMovement(gang.Base, touchDelta);
+
+            foreach (Transform memT in gang.Transforms)
             {
-                mem.JoyStickMovement(touchDelta);
+                JoyStickMovement(memT,touchDelta);
             }
         }
-
-
-        /*
-        if(input.phase == IPhase.Began)
-        {
-            initialPos = input.currentPosition;
-        }
-       
-        else
-        {
-            
-            foreach (Animator gangMemberAnim in gangAnimators)
-            {
-               
-                gangMemberAnim.SetBool("isWalking", true);
-            }
-
-            Vector2 toPos = input.currentPosition;
-            Vector2 diffVec = toPos - initialPos;
-            
-            //transform.rotation = Quaternion.identity;
-
-
-            Vector3 posVec = transform.position;
-            posVec.x += diffVec.x;
-            posVec.z += diffVec.y;
-            Vector3 lookPos = posVec;
-            lookPos.y = gangTransforms[0].position.y;
-
-            if (Vector3.SqrMagnitude(transform.position - posVec) > 50f)
-            {
-                transform.position = Vector3.MoveTowards(transform.position, posVec, 0.8f);
-
-                foreach (Transform t in gangTransforms)
-                {
-                    if (t != transform)
-                    {
-                        t.LookAt(lookPos);
-                        
-                    }
-                }
-
-            }
-
-        }
-     */
-
 
     }
 
+
+    public void JoyStickMovement(Transform memberTransform ,Vector2 posDelta)
+    {
+        Vector3 posVec = memberTransform.position;
+        posVec.x += posDelta.x;
+        posVec.z += posDelta.y;
+        memberTransform.position = Vector3.MoveTowards(memberTransform.position, posVec, 0.5f);
+
+        Vector3 lookPos = posVec;
+        lookPos.y = memberTransform.position.y;
+
+        memberTransform.LookAt(lookPos);
+
+        //   Quaternion targetRotation = Quaternion.LookRotation(posVec * 100f);
+        // transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, 35f);
+    }
 
     //hepsini kapat bazılarını ac gravity icin
 
@@ -200,4 +171,61 @@ public class GangMovementScript : MonoBehaviour
             gangTransforms.Add(firstDepthChildT);
         }
     }
+
+    OnTr
 }
+
+
+
+
+
+
+
+
+///OLD MOVE /////
+/// 
+/// 
+        /*
+        if(input.phase == IPhase.Began)
+        {
+            initialPos = input.currentPosition;
+        }
+       
+        else
+        {
+            
+            foreach (Animator gangMemberAnim in gangAnimators)
+            {
+               
+                gangMemberAnim.SetBool("isWalking", true);
+            }
+
+            Vector2 toPos = input.currentPosition;
+            Vector2 diffVec = toPos - initialPos;
+            
+            //transform.rotation = Quaternion.identity;
+
+
+            Vector3 posVec = transform.position;
+            posVec.x += diffVec.x;
+            posVec.z += diffVec.y;
+            Vector3 lookPos = posVec;
+            lookPos.y = gangTransforms[0].position.y;
+
+            if (Vector3.SqrMagnitude(transform.position - posVec) > 50f)
+            {
+                transform.position = Vector3.MoveTowards(transform.position, posVec, 0.8f);
+
+                foreach (Transform t in gangTransforms)
+                {
+                    if (t != transform)
+                    {
+                        t.LookAt(lookPos);
+                        
+                    }
+                }
+
+            }
+
+        }
+     */

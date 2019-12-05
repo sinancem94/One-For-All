@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UtmostInput;
@@ -6,6 +6,7 @@ using UtmostInput;
 public class MotherGang : MonoBehaviour
 {
     Transform memberToLoad;
+    BoxCollider collider;
 
     public struct Gang
     {
@@ -51,12 +52,13 @@ public class MotherGang : MonoBehaviour
         this.transform.position = DataManager.instance.levelData.motherGangPosition;
 
         SetBase();
+        SetCollider();
 
         CreateMembers();
     }
 
     private void Update()
-   {
+    {
        if (inputX.IsInput() && (gang.currState != GangState.Climbing || gang.currState != GangState.Bridge))
        {
             if (gang.currState != GangState.Walking)
@@ -66,54 +68,18 @@ public class MotherGang : MonoBehaviour
 
             gangMovementScript.MoveTheGang(gInput, gang);
        }
-   }
-
-    Vector2 touchStartPos;
-    Vector2 touchDelta;
-
-    public void Move()
-    {
-        GeneralInput gInput = inputX.GetInput(0);
-
-        if (gInput.phase == IPhase.Began)
-        {
-            touchStartPos = gInput.currentPosition;
-        }
-        else if (gInput.phase == IPhase.Ended)
-        {
-            touchDelta = Vector2.zero;
-        }
-        else if (gInput.phase == IPhase.Moved  || gInput.phase == IPhase.Stationary)
-        {
-            touchDelta = (gInput.currentPosition - touchStartPos);
-            touchStartPos = Vector2.MoveTowards(touchStartPos, gInput.currentPosition,Vector2.Distance(touchStartPos, gInput.currentPosition) / 50f);
-
-            JoyStickMovement(touchDelta);
-        }
     }
-
-    void JoyStickMovement(Vector2 posDelta)
-    {
-        Vector3 posVec = transform.position;
-        posVec.x += posDelta.x;
-        posVec.z += posDelta.y;
-        transform.position = Vector3.MoveTowards(transform.position, posVec, 0.8f);
-
-        Quaternion targetRotation = Quaternion.LookRotation(posVec * 100f);
-        transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, 35f);
-    }
-
 
     void CreateMembers()
     {
-        gang.Transforms = ObjectPooler.instance.PooltheObjects(memberToLoad, memberCount, this.transform,true);
+        gang.Transforms = ObjectPooler.instance.PooltheObjects(memberToLoad, memberCount, this.transform, true);
 
         gang.Members = new List<Member>(memberCount);
         gang.Animators = new List<Animator>(memberCount);
 
         foreach (Transform memberTransorm in gang.Transforms)
         {
-            Vector3 memberPos = gang.Base.localScale.x * Random.insideUnitCircle;
+            Vector3 memberPos = gang.Base.localScale.x / 2f * Random.insideUnitCircle;
             memberTransorm.transform.position = new Vector3(memberPos.x, memberToLoad.localScale.y / 2f, memberPos.y);
 
             gang.Members.Add(memberTransorm.GetComponent<Member>());
@@ -121,11 +87,10 @@ public class MotherGang : MonoBehaviour
         }
     }
 
-
     //Gang in altinda yurucegi base i olustur
     void SetBase()
     {
-        float radius = memberToLoad.localScale.x / 2f * memberCount;
+        float radius = memberToLoad.localScale.x * memberCount;
 
         Transform gangBase = transform.GetChild(0);
         gangBase.localScale = new Vector3(radius, radius, radius);
@@ -133,6 +98,24 @@ public class MotherGang : MonoBehaviour
         gang.Base = gangBase;
     }
 
+
+    void SetCollider()
+    {
+        collider = GetComponent<BoxCollider>();
+        collider.size = gang.Base.localScale;
+    }
+
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("LadderObstacle"))
+        {
+            Debug.LogError("aa"); 
+            DataScript.memberCollisionLock = true;
+            other.gameObject.tag = "UsedObject";
+            StartCoroutine(gangMovementScript.CreateLadder(10, (int)transform.lossyScale.y * 3, gangMovementScript.gangTransforms.Find(x => x.transform == transform), other.transform));                                       //gangMovementScript.gangTransforms[6]));                                  
+        }
+    }
 }
 
 
