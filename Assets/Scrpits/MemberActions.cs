@@ -11,12 +11,7 @@ public class MemberActions : MonoBehaviour
     {
         animator = GetComponent<Animator>();
     }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    
 
     public IEnumerator CreateLadder(bool isPartOfTheLadder, Vector3 ladderStartPos, Vector3 memberPosInLadder, Transform lookPosition)
     {
@@ -36,6 +31,7 @@ public class MemberActions : MonoBehaviour
             transform.LookAt(lookPosition);
             animator.SetBool("isWalking", false);
             animator.SetBool("isClimbing", true);
+
             while (Vector3.SqrMagnitude(transform.position - memberPosInLadder) > 0.5f)
             {
                 transform.position = Vector3.MoveTowards(transform.position, memberPosInLadder, 1f);

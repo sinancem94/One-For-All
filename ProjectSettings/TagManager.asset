@@ -9,6 +9,7 @@ TagManager:
   - UsedObject
   - Ground
   - WreckingBall
+  - Base
   layers:
   - Default
   - TransparentFX

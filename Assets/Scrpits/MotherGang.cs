@@ -6,18 +6,26 @@ using UtmostInput;
 public class MotherGang : MonoBehaviour
 {
     Transform memberToLoad;
-    List<Transform> GangMemberTransforms;
-    public List<Member> Members;
-    List<Animator> gangMemberAnimators;
+
+    public struct Gang
+    {
+        public GangState currState;
+
+        //gangin ustunde gitcegi base
+        public Transform Base;
+
+        public List<Transform> Transforms;
+        public List<Member> Members;
+        public List<Animator> Animators;
+    }
+
+    Gang gang;
 
     int memberCount;
     
     InputX inputX;
 
     private GangMovementScript gangMovementScript;
-    float Radius; //adamlarin olusabilecegi, ilerleyebilcegi daire buyuklugu
-    GangState currGangState;
-
     public enum GangState
     {
         Idle = 0,
@@ -30,32 +38,33 @@ public class MotherGang : MonoBehaviour
     {
         //Create necessary objects
         inputX = new InputX();
+        gangMovementScript = GetComponent<GangMovementScript>();
 
         //CrateMembers
         memberToLoad = Resources.Load<Transform>("Prefabs/GangMember");
 
-        currGangState = GangState.Idle;
+        gang = new Gang();
 
-        if(DataManager.instance != null)
-        {
-            memberCount = DataManager.instance.levelData.memberCount;
-            this.transform.position = DataManager.instance.levelData.motherGangPosition;
+        gang.currState = GangState.Idle;
 
-            Radius = SetRadius();
+        memberCount = DataManager.instance.levelData.memberCount;
+        this.transform.position = DataManager.instance.levelData.motherGangPosition;
 
-            CreateMembers();
-        }
-        
+        SetBase();
+
+        CreateMembers();
     }
-    
+
     private void Update()
    {
-       if (inputX.IsInput() && (currGangState != GangState.Climbing || currGangState != GangState.Bridge))
+       if (inputX.IsInput() && (gang.currState != GangState.Climbing || gang.currState != GangState.Bridge))
        {
-            if (currGangState != GangState.Walking)
-                currGangState = GangState.Walking;
+            if (gang.currState != GangState.Walking)
+                gang.currState = GangState.Walking;
 
-            Move();
+            GeneralInput gInput = inputX.GetInput(0);
+
+            gangMovementScript.MoveTheGang(gInput, gang);
        }
    }
 
@@ -77,7 +86,6 @@ public class MotherGang : MonoBehaviour
         else if (gInput.phase == IPhase.Moved  || gInput.phase == IPhase.Stationary)
         {
             touchDelta = (gInput.currentPosition - touchStartPos);
-            Debug.Log(Vector2.Distance(touchStartPos, gInput.currentPosition));
             touchStartPos = Vector2.MoveTowards(touchStartPos, gInput.currentPosition,Vector2.Distance(touchStartPos, gInput.currentPosition) / 50f);
 
             JoyStickMovement(touchDelta);
@@ -98,26 +106,31 @@ public class MotherGang : MonoBehaviour
 
     void CreateMembers()
     {
-        GangMemberTransforms = ObjectPooler.instance.PooltheObjects(memberToLoad, memberCount, this.transform,true);
+        gang.Transforms = ObjectPooler.instance.PooltheObjects(memberToLoad, memberCount, this.transform,true);
 
-        Members = new List<Member>(memberCount);
-        gangMemberAnimators = new List<Animator>(memberCount);
+        gang.Members = new List<Member>(memberCount);
+        gang.Animators = new List<Animator>(memberCount);
 
-        foreach (Transform memberTransorm in GangMemberTransforms)
+        foreach (Transform memberTransorm in gang.Transforms)
         {
-            Vector3 memberPos = Radius * Random.insideUnitCircle;
+            Vector3 memberPos = gang.Base.localScale.x * Random.insideUnitCircle;
             memberTransorm.transform.position = new Vector3(memberPos.x, memberToLoad.localScale.y / 2f, memberPos.y);
 
-            Members.Add(memberTransorm.GetComponent<Member>());
-            gangMemberAnimators.Add(memberTransorm.GetComponent<Animator>());
+            gang.Members.Add(memberTransorm.GetComponent<Member>());
+            gang.Animators.Add(memberTransorm.GetComponent<Animator>());
         }
     }
 
 
-    //Decide circle radius which members will instantiate and move
-    float SetRadius()
+    //Gang in altinda yurucegi base i olustur
+    void SetBase()
     {
-        return memberToLoad.localScale.x / 5f * memberCount;
+        float radius = memberToLoad.localScale.x / 2f * memberCount;
+
+        Transform gangBase = transform.GetChild(0);
+        gangBase.localScale = new Vector3(radius, radius, radius);
+
+        gang.Base = gangBase;
     }
 
 }

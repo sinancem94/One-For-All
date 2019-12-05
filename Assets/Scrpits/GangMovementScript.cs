@@ -80,8 +80,9 @@ public class GangMovementScript : MonoBehaviour
             touchStartPos = Vector2.MoveTowards(touchStartPos, gInput.currentPosition, Vector2.Distance(touchStartPos, gInput.currentPosition) / 50f);
 
             foreach(Member mem in gang.Members)
-
-            mem.JoyStickMovement(touchDelta);
+            {
+                mem.JoyStickMovement(touchDelta);
+            }
         }
 
 
