@@ -17,7 +17,7 @@ public class DataManager
         }
         else
         {
-            Debug.LogError(ME + " already exist");
+           // Debug.LogError(ME + " already exist");
         }
 
         LvlData getLevelData;
