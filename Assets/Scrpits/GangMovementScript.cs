@@ -171,8 +171,6 @@ public class GangMovementScript : MonoBehaviour
             gangTransforms.Add(firstDepthChildT);
         }
     }
-
-    OnTr
 }
 
 
