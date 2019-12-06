@@ -6,21 +6,19 @@ public class MemberActions : MonoBehaviour
 {
     Animator animator;
 
-    // Start is called before the first frame update
+    
     void Start()
     {
         animator = GetComponent<Animator>();
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+   
 
     public IEnumerator CreateLadder(bool isPartOfTheLadder, Vector3 ladderStartPos, Vector3 memberPosInLadder, Transform lookPosition)
     {
         DataScript.isGravityOpen = false;
+        GetComponent<Rigidbody>().useGravity = false;
+        GetComponent<Collider>().isTrigger = true;
         if (isPartOfTheLadder)
         {
             //send member to ladders start position
@@ -89,6 +87,7 @@ public class MemberActions : MonoBehaviour
 
             animator.SetBool("isWalking", false);
             GetComponent<Rigidbody>().useGravity = true;
+            GetComponent<Collider>().isTrigger = false;
         }
 
         StopCoroutine(CreateLadder(isPartOfTheLadder, ladderStartPos, memberPosInLadder, lookPosition));
@@ -96,8 +95,9 @@ public class MemberActions : MonoBehaviour
 
     public IEnumerator CreateBridge(bool isPartOfTheBridge, Vector3 bridgeStartPos, Vector3 memberPosInBridge, Transform lookPosition)
     {
-        
-        DataScript.isGravityOpen = false;
+
+        GetComponent<Rigidbody>().useGravity = false;
+        GetComponent<Collider>().isTrigger = true;
         if (isPartOfTheBridge)
         {
             //send member to ladders start position
@@ -173,6 +173,7 @@ public class MemberActions : MonoBehaviour
 
             animator.SetBool("isWalking", false);
             GetComponent<Rigidbody>().useGravity = true;
+            GetComponent<Collider>().isTrigger = false;
         }
 
         StopCoroutine(CreateLadder(isPartOfTheBridge, bridgeStartPos, memberPosInBridge, lookPosition));

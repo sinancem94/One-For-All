@@ -60,6 +60,41 @@ public class Member : MonoBehaviour
 
     
 
+
+    private void OnCollisionEnter(Collision collision)
+    {
+       
+        if (collision.gameObject.tag == "LadderObstacle" && !DataScript.memberCollisionLock)
+        {
+            DataScript.memberCollisionLock = true;
+            collision.gameObject.tag = "UsedObject";
+            collision.gameObject.layer = 9;
+            StartCoroutine(gangMovementScript.CreateLadder(10, 3, gangMovementScript.gangTransforms.Find(x => x.transform == transform), collision.transform));                                       //gangMovementScript.gangTransforms[6]));                                  
+        }
+
+        if (collision.gameObject.tag == "BridgeObstacle" && !DataScript.memberCollisionLock)
+        {
+            DataScript.memberCollisionLock = true;
+            collision.gameObject.tag = "UsedObject";
+            collision.gameObject.layer = 9;
+            StartCoroutine(gangMovementScript.CreateBridge(8, 3, gangMovementScript.gangTransforms.Find(x => x.transform == transform), collision.transform));
+        }
+
+        if (collision.gameObject.tag == "WreckingBall")
+        {
+            Debug.Log("wreckk");
+            OpenRagdollPhysics();
+        }
+
+        if (collision.gameObject.tag == "FinishLine")
+        {
+            uIScript.LevelPassed();
+            Debug.Log("Level Passed");
+        }
+    }
+
+
+
     private void OnTriggerEnter(Collider other)
     {
         if(other.gameObject.tag == "Ground")
@@ -96,13 +131,5 @@ public class Member : MonoBehaviour
         }
     }
 
-    private void OnTriggerExit(Collider other)
-    {
-        if (other.gameObject.tag == "Ground" && DataScript.isGravityOpen)
-        {
-            Debug.Log("ungrounded");
-            GetComponent<Rigidbody>().useGravity = true;
-            GetComponent<Rigidbody>().velocity = Vector3.zero;
-        }
-    }
+   
 }

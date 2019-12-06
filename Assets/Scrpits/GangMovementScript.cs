@@ -24,8 +24,7 @@ public class GangMovementScript : MonoBehaviour
         gangTransforms = new List<Transform>();
 
         SetGangList();
-        //StartCoroutine(CreateLadder(5,3,gangTransforms[0]));
-
+       
     }
 
     void Update()
@@ -121,19 +120,20 @@ public class GangMovementScript : MonoBehaviour
             gangMemberAnim.SetBool("isWalking", false);
         }
 
-        firstMemberOfLadder.gameObject.GetComponent<Animator>().SetBool("isClimbing", true);
-        firstMemberOfLadder.gameObject.GetComponent<Animator>().SetBool("isClimbFinished", true);
+        //firstMemberOfLadder.gameObject.GetComponent<Animator>().SetBool("isClimbing", true);
+        //firstMemberOfLadder.gameObject.GetComponent<Animator>().SetBool("isClimbFinished", true);
 
-        firstMemberOfLadder.parent = null;
+        //firstMemberOfLadder.parent = null;
         SetGangList();
 
         //for creating the ladder
-        for (int i = 0; i < ladderLength-1; i++)
+        for (int i = 0; i < ladderLength; i++)
         {
             if (i < gangTransforms.Count)
             {
-                memberPosInLadder.y = memberPosInLadder.y + diffBtwLadderMembers;
+                
                 StartCoroutine(gangTransforms[i].gameObject.GetComponent<MemberActions>().CreateLadder(true, ladderStartPos, memberPosInLadder, lookPosition));
+                memberPosInLadder.y = memberPosInLadder.y + diffBtwLadderMembers;
                 yield return new WaitForSecondsRealtime(0.5f);
             }
         }
@@ -143,9 +143,9 @@ public class GangMovementScript : MonoBehaviour
         memberPosInLadder.y += diffBtwLadderMembers;
 
         //for sending rest of the gang to the top of the ladder
-        if(ladderLength - 1 < gangTransforms.Count)
+        if(ladderLength < gangTransforms.Count)
         {
-            for (int i = ladderLength - 1; i < gangTransforms.Count; i++)
+            for (int i = ladderLength; i < gangTransforms.Count; i++)
             {
                 StartCoroutine(gangTransforms[i].gameObject.GetComponent<MemberActions>().CreateLadder(false, ladderStartPos, memberPosInLadder, lookPosition));
                 yield return new WaitForSecondsRealtime(0.5f);
