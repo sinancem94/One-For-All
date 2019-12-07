@@ -12,6 +12,7 @@ TagManager:
   - Base
   - FinishLine
   - BridgeObstacle
+  - HouseObstacle
   layers:
   - Default
   - TransparentFX
@@ -26,7 +27,7 @@ TagManager:
   - Wrecking Ball
   - Finish Line
   - BridgeObstacle
-  - 
+  - HouseObstacle
   - 
   - 
   - 

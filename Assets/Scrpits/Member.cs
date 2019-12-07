@@ -59,45 +59,49 @@ public class Member : MonoBehaviour
     }
 
 
-    private void OnTriggerEnter(Collider other)
+
+    private void OnCollisionEnter(Collision collision)
     {
         //tag karsilastirmanin hizli youlu.Layer daha iyi olabilir
-        if(other.CompareTag("Ground"))
-        {
-            Debug.Log("grounded");
-            GetComponent<Rigidbody>().useGravity = false;
-            GetComponent<Rigidbody>().velocity = Vector3.zero;
-        }
-        
-        /*if (other.CompareTag("LadderObstacle") && !DataScript.memberCollisionLock)
+        if (collision.gameObject.CompareTag("LadderObstacle")  && !DataScript.memberCollisionLock)
         {
             DataScript.memberCollisionLock = true;
-            other.gameObject.tag = "UsedObject";
-            //StartCoroutine(gangMovementScript.CreateLadder(10, (int)transform.lossyScale.y * 3, gangMovementScript.gangTransforms.Find(x => x.transform == transform),other.transform));                                       //gangMovementScript.gangTransforms[6]));                                  
-        }*/
+            collision.gameObject.tag = "UsedObject";
+            collision.gameObject.layer = 9;
+            StartCoroutine(gangMovementScript.CreateLadder(10, 3, gangMovementScript.gangTransforms.Find(x => x.transform == transform), collision.transform));                                       //gangMovementScript.gangTransforms[6]));                                  
+        }
 
-      
+        if (collision.gameObject.CompareTag("BridgeObstacle") && !DataScript.memberCollisionLock)
+        {
+            DataScript.memberCollisionLock = true;
+            collision.gameObject.tag = "UsedObject";
+            collision.gameObject.layer = 9;
+            StartCoroutine(gangMovementScript.CreateBridge(8, 3, gangMovementScript.gangTransforms.Find(x => x.transform == transform), collision.transform));
+        }
 
-        if(other.gameObject.tag == "WreckingBall")
+        if (collision.gameObject.CompareTag("WreckingBall"))
         {
             Debug.Log("wreckk");
             OpenRagdollPhysics();
         }
 
-        if(other.gameObject.tag == "FinishLine")
+        if (collision.gameObject.CompareTag("FinishLine"))
+        {
+            uIScript.LevelPassed();
+            Debug.Log("Level Passed");
+        }
+
+        if (collision.gameObject.CompareTag("WreckingBall"))
+        {
+            Debug.Log("wreckk");
+            OpenRagdollPhysics();
+        }
+
+        if (collision.gameObject.CompareTag("FinishLine"))
         {
             uIScript.LevelPassed();
             Debug.Log("Level Passed");
         }
     }
 
-    private void OnTriggerExit(Collider other)
-    {
-        if (other.gameObject.tag == "Ground" && DataScript.isGravityOpen)
-        {
-            Debug.Log("ungrounded");
-            GetComponent<Rigidbody>().useGravity = true;
-            GetComponent<Rigidbody>().velocity = Vector3.zero;
-        }
-    }
 }
