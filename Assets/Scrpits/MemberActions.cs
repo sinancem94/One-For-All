@@ -11,7 +11,6 @@ public class MemberActions : MonoBehaviour
     {
         animator = GetComponent<Animator>();
     }
-    
 
     public IEnumerator CreateLadder(bool isPartOfTheLadder, Vector3 ladderStartPos, Vector3 memberPosInLadder, Transform lookPosition)
     {

@@ -5,8 +5,16 @@ using UtmostInput;
 
 public class MotherGang : MonoBehaviour
 {
+    int memberCount;
     Transform memberToLoad;
-    BoxCollider collider;
+
+    public enum GangState
+    {
+        Idle = 0,
+        Walking,
+        Climbing,
+        Bridge
+    };
 
     public struct Gang
     {
@@ -21,19 +29,9 @@ public class MotherGang : MonoBehaviour
     }
 
     Gang gang;
-
-    int memberCount;
-    
     InputX inputX;
 
     private GangMovementScript gangMovementScript;
-    public enum GangState
-    {
-        Idle = 0,
-        Walking,
-        Climbing,
-        Bridge
-    };
 
     void Start()
     {
@@ -52,7 +50,6 @@ public class MotherGang : MonoBehaviour
         this.transform.position = DataManager.instance.levelData.motherGangPosition;
 
         SetBase();
-        SetCollider();
 
         CreateMembers();
     }
@@ -99,21 +96,22 @@ public class MotherGang : MonoBehaviour
     }
 
 
-    void SetCollider()
-    {
-        collider = GetComponent<BoxCollider>();
-        collider.size = gang.Base.localScale;
-    }
 
 
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("LadderObstacle"))
         {
-            Debug.LogError("aa"); 
             DataScript.memberCollisionLock = true;
             other.gameObject.tag = "UsedObject";
             StartCoroutine(gangMovementScript.CreateLadder(10, (int)transform.lossyScale.y * 3, gangMovementScript.gangTransforms.Find(x => x.transform == transform), other.transform));                                       //gangMovementScript.gangTransforms[6]));                                  
+        }
+
+        if (other.CompareTag("BridgeObstacle") && !DataScript.memberCollisionLock)
+        {
+            DataScript.memberCollisionLock = true;
+            other.gameObject.tag = "UsedObject";
+            StartCoroutine(gangMovementScript.CreateBridge(8, 3, gangMovementScript.gangTransforms.Find(x => x.transform == transform), other.transform));
         }
     }
 }

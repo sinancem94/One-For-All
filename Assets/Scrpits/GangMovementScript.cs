@@ -108,7 +108,7 @@ public class GangMovementScript : MonoBehaviour
 
         memberTransform.LookAt(lookPos);
 
-        //   Quaternion targetRotation = Quaternion.LookRotation(posVec * 100f);
+        // Quaternion targetRotation = Quaternion.LookRotation(posVec * 100f);
         // transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, 35f);
     }
 

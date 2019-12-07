@@ -76,13 +76,7 @@ public class Member : MonoBehaviour
             //StartCoroutine(gangMovementScript.CreateLadder(10, (int)transform.lossyScale.y * 3, gangMovementScript.gangTransforms.Find(x => x.transform == transform),other.transform));                                       //gangMovementScript.gangTransforms[6]));                                  
         }*/
 
-
-        if(other.gameObject.tag == "BridgeObstacle" && !DataScript.memberCollisionLock)
-        {
-            DataScript.memberCollisionLock = true;
-            other.gameObject.tag = "UsedObject";
-            StartCoroutine(gangMovementScript.CreateBridge(8, 3, gangMovementScript.gangTransforms.Find(x => x.transform == transform), other.transform));
-        }
+      
 
         if(other.gameObject.tag == "WreckingBall")
         {
