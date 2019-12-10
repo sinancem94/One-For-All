@@ -23,12 +23,27 @@ public class LvlData
             case 1:
             default:
 
-            memberCount = 25;
-            gangPosition = Vector3.zero;
+            GameObject Map = LoadLevel(1);
 
+            GameObject ground = GameObject.FindGameObjectWithTag("Ground");
+
+            memberCount = 25;
+            gangPosition = new Vector3(0f, ground.transform.position.y, 0f);
+
+            
             break;
 
         }
+    }
+
+    GameObject LoadLevel(int level)
+    {
+        string mapStr = "Prefabs/Map" + level.ToString();
+
+        Debug.Log("Creating " + mapStr);
+
+        GameObject Map = (GameObject)Resources.Load(mapStr);
+        return GameObject.Instantiate(Map);
     }
 
     public DataManager.LevelData GetLevelData()

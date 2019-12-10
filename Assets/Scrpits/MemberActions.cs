@@ -1,180 +1,194 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
-public class MemberActions : MonoBehaviour
+public class MemberActions 
 {
-    Animator animator;
+    float actionSpeed = 1.5f;
 
-    
-    void Start()
+    //Members will call this function for climbing existing ladders. 
+    public IEnumerator ClimbLadder(MotherGang.GangMember member, Vector3 ladderStartPos, Vector3 memberPosInLadder, Action AddToMovables)
     {
-        animator = GetComponent<Animator>();
+        member.transform.GetComponent<Rigidbody>().useGravity = false;
+        member.transform.GetComponent<Collider>().isTrigger = true;
+
+        float randX = UnityEngine.Random.Range(-5f, 5f);
+        float randZ = UnityEngine.Random.Range(2f, 10f);
+
+        Vector3 lastPos = new Vector3(memberPosInLadder.x + randX, memberPosInLadder.y, memberPosInLadder.z + randZ);
+
+        //send member to ladders start position
+        member.animator.SetBool("isWalking", true);
+
+        while (Vector3.SqrMagnitude(member.transform.position - ladderStartPos) > 0.5f)
+        {
+            member.transform.position = Vector3.MoveTowards(member.transform.position, ladderStartPos, actionSpeed);
+            yield return new WaitForSecondsRealtime(UnityEngine.Random.Range(0.05f, 0.1f));
+        }
+
+        member.transform.position = ladderStartPos;
+
+        //climb member to the top of the ladder
+        member.animator.SetBool("isWalking", false);
+        member.animator.SetBool("isClimbing", true);
+
+        while (Vector3.SqrMagnitude(member.transform.position - memberPosInLadder) > 0.5f)
+        {
+            member.transform.position = Vector3.MoveTowards(member.transform.position, memberPosInLadder, actionSpeed);
+            yield return new WaitForSecondsRealtime(UnityEngine.Random.Range(0.05f, 0.1f));
+        }
+
+        member.transform.position = memberPosInLadder;
+        //send member to a random location after climbing to prevent them all stay at the same position
+        //this position should be handled more precisely
+        member.animator.SetBool("isClimbing", false);
+        member.animator.SetBool("isWalking", true);
+        while (Vector3.SqrMagnitude(member.transform.position - lastPos) > 0.5f)
+        {
+            member.transform.position = Vector3.MoveTowards(member.transform.position, lastPos, actionSpeed);
+            yield return new WaitForSecondsRealtime(UnityEngine.Random.Range(0.05f, 0.1f));
+        }
+
+        member.transform.position = lastPos;
+
+        member.animator.SetBool("isWalking", false);
+        member.transform.GetComponent<Rigidbody>().useGravity = true;
+        member.transform.GetComponent<Collider>().isTrigger = false;
+
+        if (AddToMovables != null)
+            AddToMovables();
     }
 
-    public IEnumerator CreateLadder(bool isPartOfTheLadder, Vector3 ladderStartPos, Vector3 memberPosInLadder, Transform lookPosition)
+    //This function is called from member to create ladder.
+    public IEnumerator CreateLadder(MotherGang.GangMember member, Vector3 ladderStartPos, Vector3 memberPosInLadder, Action setNewGangBasePostion)
     {
-        DataScript.isGravityOpen = false;
-        GetComponent<Rigidbody>().useGravity = false;
-        GetComponent<Collider>().isTrigger = true;
-        if (isPartOfTheLadder)
+        member.transform.GetComponent<Rigidbody>().useGravity = false;
+        member.transform.GetComponent<Collider>().isTrigger = true;
+
+        //send member to ladders start position
+        member.animator.SetBool("isWalking", true);
+
+        while (Vector3.SqrMagnitude(member.transform.position - ladderStartPos) > 0.5f)
         {
-            //send member to ladders start position
-            transform.LookAt(ladderStartPos);
-            animator.SetBool("isWalking", true);
-            while (Vector3.SqrMagnitude(transform.position - ladderStartPos) > 0.5f)
-            {
-                transform.position = Vector3.MoveTowards(transform.position, ladderStartPos, 0.5f);
-                yield return new WaitForSecondsRealtime(0.02f);
-            }
-
-            //climb member to its corresponding ladder position
-            transform.LookAt(lookPosition);
-            animator.SetBool("isWalking", false);
-            animator.SetBool("isClimbing", true);
-
-            while (Vector3.SqrMagnitude(transform.position - memberPosInLadder) > 0.5f)
-            {
-                transform.position = Vector3.MoveTowards(transform.position, memberPosInLadder, 1f);
-                yield return new WaitForSecondsRealtime(0.1f);
-            }
-
-            //set the after climb position of the member
-            animator.SetBool("isClimbFinished", true);
-            animator.SetBool("isClimbing", false);
-            Vector3 newLookPos = lookPosition.position;
-            newLookPos.y = transform.position.y;
-            transform.LookAt(newLookPos);
-            transform.parent = null;
+            member.transform.position = Vector3.MoveTowards(member.transform.position, ladderStartPos, actionSpeed);
+            yield return new WaitForSecondsRealtime(UnityEngine.Random.Range(0.05f, 0.1f));
         }
-        else
+        member.transform.position = ladderStartPos;
+
+        //climb member to its corresponding ladder position
+        member.animator.SetBool("isWalking", false);
+        member.animator.SetBool("isClimbing", true);
+
+        while (Vector3.SqrMagnitude(member.transform.position - memberPosInLadder) > 0.5f)
         {
-            float randX = Random.Range(-5f, 5f);
-            float randZ = Random.Range(2f, 10f);
-
-            Vector3 lastPos = new Vector3(memberPosInLadder.x + randX, memberPosInLadder.y, memberPosInLadder.z + randZ);
-
-            //send member to ladders start position
-            transform.LookAt(ladderStartPos);
-            animator.SetBool("isWalking", true);
-            while (Vector3.SqrMagnitude(transform.position - ladderStartPos) > 0.5f)
-            {
-                transform.position = Vector3.MoveTowards(transform.position, ladderStartPos, 2f);
-                yield return new WaitForSecondsRealtime(0.1f);
-            }
-
-            //climb member to the top of the ladder
-            transform.LookAt(lookPosition);        //change it to dynamic
-            animator.SetBool("isWalking", false);
-            animator.SetBool("isClimbing", true);
-            while (Vector3.SqrMagnitude(transform.position - memberPosInLadder) > 0.5f)
-            {
-                transform.position = Vector3.MoveTowards(transform.position, memberPosInLadder, 1f);
-                yield return new WaitForSecondsRealtime(0.1f);
-            }
-
-            //send member to a random location after climbing to prevent them all stay at the same position
-            //this position should be handled more precisely
-            transform.LookAt(lastPos);
-            animator.SetBool("isClimbing", false);
-            animator.SetBool("isWalking", true);
-            while (Vector3.SqrMagnitude(transform.position - lastPos) > 0.5f)
-            {
-                transform.position = Vector3.MoveTowards(transform.position, lastPos, 2f);
-                yield return new WaitForSecondsRealtime(0.1f);
-            }
-
-            animator.SetBool("isWalking", false);
-            GetComponent<Rigidbody>().useGravity = true;
-            GetComponent<Collider>().isTrigger = false;
+            member.transform.position = Vector3.MoveTowards(member.transform.position, memberPosInLadder, actionSpeed);
+            yield return new WaitForSecondsRealtime(UnityEngine.Random.Range(0.05f, 0.1f));
         }
 
-        StopCoroutine(CreateLadder(isPartOfTheLadder, ladderStartPos, memberPosInLadder, lookPosition));
+        member.transform.position = memberPosInLadder;
+
+        //set the after climb position of the member
+        member.animator.SetBool("isClimbFinished", true);
+        member.animator.SetBool("isClimbing", false);
+        
+        member.transform.parent = null;
+
+        if (setNewGangBasePostion != null)
+            setNewGangBasePostion();
     }
 
-    public IEnumerator CreateBridge(bool isPartOfTheBridge, Vector3 bridgeStartPos, Vector3 memberPosInBridge, Transform lookPosition)
+
+    public IEnumerator CreateBridge(MotherGang.GangMember member, Vector3 bridgeStartPos, Vector3 memberPosInBridge, Action setNewGangBasePostion)
     {
+        member.transform.GetComponent<Rigidbody>().useGravity = false;
+        member.transform.GetComponent<Collider>().isTrigger = true;
 
-        GetComponent<Rigidbody>().useGravity = false;
-        GetComponent<Collider>().isTrigger = true;
-        if (isPartOfTheBridge)
+        //send member to ladders start position
+        member.transform.LookAt(bridgeStartPos);
+        member.animator.SetBool("isWalking", true);
+        while (Vector3.SqrMagnitude(member.transform.position - bridgeStartPos) > 0.5f)
         {
-            //send member to ladders start position
-            transform.LookAt(bridgeStartPos);
-            animator.SetBool("isWalking", true);
-            while (Vector3.SqrMagnitude(transform.position - bridgeStartPos) > 0.5f)
-            {
-                transform.position = Vector3.MoveTowards(transform.position, bridgeStartPos, 0.5f);
-                yield return new WaitForSecondsRealtime(0.02f);
-            }
-
-            //climb member to its corresponding ladder position
-            Vector3 newLookPos = transform.position;
-            newLookPos.y -= 5;
-            transform.LookAt(newLookPos);
-            animator.SetBool("isWalking", false);
-            animator.SetBool("isClimbing", true);
-            while (Vector3.SqrMagnitude(transform.position - memberPosInBridge) > 0.5f)
-            {
-                newLookPos = transform.position;
-                newLookPos.y -= 5;
-                transform.LookAt(newLookPos);
-                transform.position = Vector3.MoveTowards(transform.position, memberPosInBridge, 1f);
-                yield return new WaitForSecondsRealtime(0.1f);
-            }
-
-            //set the after climb position of the member
-            animator.SetBool("isClimbFinished", true);
-            animator.SetBool("isClimbing", false);
-            newLookPos = transform.position;
-            newLookPos.y -= 5;
-            transform.LookAt(newLookPos);
-            transform.parent = null;
-        }
-        else
-        {
-            float randX = Random.Range(-5f, 5f);
-            float randZ = Random.Range(2f, 10f);
-
-            Vector3 lastPos = new Vector3(memberPosInBridge.x + randX, memberPosInBridge.y, memberPosInBridge.z + randZ);
-
-            //send member to ladders start position
-            transform.LookAt(bridgeStartPos);
-            animator.SetBool("isWalking", true);
-            while (Vector3.SqrMagnitude(transform.position - bridgeStartPos) > 0.5f)
-            {
-                transform.position = Vector3.MoveTowards(transform.position, bridgeStartPos, 2f);
-                yield return new WaitForSecondsRealtime(0.1f);
-            }
-
-            //climb member to the top of the ladder
-            Vector3 newLookPos = transform.position;
-            newLookPos.y -= 5;
-            transform.LookAt(newLookPos);
-            animator.SetBool("isWalking", false);
-            animator.SetBool("isClimbing", true);
-            while (Vector3.SqrMagnitude(transform.position - memberPosInBridge) > 0.5f)
-            {
-                transform.position = Vector3.MoveTowards(transform.position, memberPosInBridge, 1f);
-                yield return new WaitForSecondsRealtime(0.1f);
-            }
-
-            //send member to a random location after climbing to prevent them all stay at the same position
-            //this position should be handled more precisely
-            transform.LookAt(lastPos);
-            animator.SetBool("isClimbing", false);
-            animator.SetBool("isWalking", true);
-            while (Vector3.SqrMagnitude(transform.position - lastPos) > 0.5f)
-            {
-                transform.position = Vector3.MoveTowards(transform.position, lastPos, 2f);
-                yield return new WaitForSecondsRealtime(0.1f);
-            }
-
-            animator.SetBool("isWalking", false);
-            GetComponent<Rigidbody>().useGravity = true;
-            GetComponent<Collider>().isTrigger = false;
+            member.transform.position = Vector3.MoveTowards(member.transform.position, bridgeStartPos, actionSpeed);
+            yield return new WaitForSecondsRealtime(UnityEngine.Random.Range(0.05f, 0.1f));
         }
 
-        StopCoroutine(CreateLadder(isPartOfTheBridge, bridgeStartPos, memberPosInBridge, lookPosition));
+        member.transform.position = bridgeStartPos;
+
+        //climb member to its corresponding ladder position
+        Vector3 newLookPos = member.transform.position;
+        newLookPos.y -= 5;
+        member.transform.LookAt(newLookPos);
+        member.animator.SetBool("isWalking", false);
+        member.animator.SetBool("isClimbing", true);
+        while (Vector3.SqrMagnitude(member.transform.position - memberPosInBridge) > 0.5f)
+        {
+            newLookPos = member.transform.position;
+            newLookPos.y -= 5;
+            member.transform.LookAt(newLookPos);
+            member.transform.position = Vector3.MoveTowards(member.transform.position, memberPosInBridge, actionSpeed);
+            yield return new WaitForSecondsRealtime(UnityEngine.Random.Range(0.05f, 0.1f));
+        }
+
+        member.transform.position = memberPosInBridge;
+
+        //set the after climb position of the member
+        member.animator.SetBool("isClimbFinished", true);
+        member.animator.SetBool("isClimbing", false);
+        newLookPos = member.transform.position;
+        newLookPos.y -= 5;
+        member.transform.LookAt(newLookPos);
+        member.transform.parent = null;
+
+        if(setNewGangBasePostion != null)
+            setNewGangBasePostion();
+    }
+
+    public IEnumerator PassBridge(MotherGang.GangMember member, Vector3 bridgeStartPos, Vector3 memberPosInBridge, Action AddToMovables)
+    {
+        member.transform.GetComponent<Rigidbody>().useGravity = false;
+        member.transform.GetComponent<Collider>().isTrigger = true;
+
+
+        float randX = UnityEngine.Random.Range(-5f, 5f);
+        float randZ = UnityEngine.Random.Range(2f, 10f);
+
+        Vector3 lastPos = new Vector3(memberPosInBridge.x + randX, memberPosInBridge.y, memberPosInBridge.z + randZ);
+
+        //send member to ladders start position
+        member.animator.SetBool("isWalking", true);
+        while (Vector3.SqrMagnitude(member.transform.position - bridgeStartPos) > 0.5f)
+        {
+            member.transform.position = Vector3.MoveTowards(member.transform.position, bridgeStartPos, actionSpeed);
+            yield return new WaitForSecondsRealtime(UnityEngine.Random.Range(0.05f, 0.1f));
+        }
+        member.transform.position = bridgeStartPos;
+
+        //climb member to the top of the ladder
+        while (Vector3.SqrMagnitude(member.transform.position - memberPosInBridge) > 0.5f)
+        {
+            member.transform.position = Vector3.MoveTowards(member.transform.position, memberPosInBridge, actionSpeed);
+            yield return new WaitForSecondsRealtime(UnityEngine.Random.Range(0.05f, 0.1f));
+        }
+        member.transform.position = memberPosInBridge;
+
+        //send member to a random location after climbing to prevent them all stay at the same position
+        //this position should be handled more precisely
+        member.transform.LookAt(lastPos);
+
+        while (Vector3.SqrMagnitude(member.transform.position - lastPos) > 0.5f)
+        {
+            member.transform.position = Vector3.MoveTowards(member.transform.position, lastPos, actionSpeed);
+            yield return new WaitForSecondsRealtime(UnityEngine.Random.Range(0.05f, 0.1f));
+        }
+
+        member.transform.position = lastPos;
+
+        member.animator.SetBool("isWalking", false);
+        member.transform.GetComponent<Rigidbody>().useGravity = true;
+        member.transform.GetComponent<Collider>().isTrigger = false;
+
+        if (AddToMovables != null)
+            AddToMovables();
     }
 }

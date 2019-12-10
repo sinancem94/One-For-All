@@ -6,7 +6,7 @@ public class DataManager
 {
     public static DataManager instance;
 
-    public string ME = "DataManager";
+    string ME = "DataManager";
     public LevelData levelData;
 
     public DataManager()
@@ -26,6 +26,8 @@ public class DataManager
         levelData = getLevelData.GetLevelData();
 
     }
+
+    public MotherGang.GangState currentGangState;
 
     //Current level data
     public struct LevelData

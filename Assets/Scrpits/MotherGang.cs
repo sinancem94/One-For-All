@@ -19,13 +19,26 @@ public class MotherGang : MonoBehaviour
     public struct Gang
     {
         public GangState currState;
-
         //gangin ustunde gitcegi base
         public Transform Base;
 
-        public List<Transform> Transforms;
-        public List<Member> Members;
-        public List<Animator> Animators;
+        public List<GangMember> MovableMembers;
+
+        public List<GangMember> AllGang;
+    }
+
+    public struct GangMember
+    {
+        public GangMember(Transform memT, Member memM, Animator memA)
+        {
+            transform = memT;
+            member = memM;
+            animator = memA;
+        }
+
+        public Transform transform;
+        public Animator animator;
+        public Member member;
     }
 
     Gang gang;
@@ -45,6 +58,7 @@ public class MotherGang : MonoBehaviour
         gang = new Gang();
 
         gang.currState = GangState.Idle;
+        DataManager.instance.currentGangState = GangState.Idle;
 
         memberCount = DataManager.instance.levelData.memberCount;
         this.transform.position = DataManager.instance.levelData.motherGangPosition;
@@ -56,11 +70,9 @@ public class MotherGang : MonoBehaviour
 
     private void Update()
     {
-       if (inputX.IsInput() && (gang.currState != GangState.Climbing || gang.currState != GangState.Bridge))
+        
+       if (inputX.IsInput() && (DataManager.instance.currentGangState != GangState.Climbing && DataManager.instance.currentGangState != GangState.Bridge))
        {
-            if (gang.currState != GangState.Walking)
-                gang.currState = GangState.Walking;
-
             GeneralInput gInput = inputX.GetInput(0);
 
             gangMovementScript.MoveTheGang(gInput, gang);
@@ -69,49 +81,82 @@ public class MotherGang : MonoBehaviour
 
     void CreateMembers()
     {
-        gang.Transforms = ObjectPooler.instance.PooltheObjects(memberToLoad, memberCount, this.transform, true);
+        gang.MovableMembers = new List<GangMember>(memberCount);
 
-        gang.Members = new List<Member>(memberCount);
-        gang.Animators = new List<Animator>(memberCount);
+        List<Transform> gangTransforms = ObjectPooler.instance.PooltheObjects(memberToLoad, memberCount, this.transform, true);
 
-        foreach (Transform memberTransorm in gang.Transforms)
+        for(int i = 0; i < memberCount; i++)
         {
-            Vector3 memberPos = gang.Base.localScale.x / 2f * Random.insideUnitCircle;
-            memberTransorm.transform.position = new Vector3(memberPos.x, memberToLoad.localScale.y / 2f, memberPos.y);
+            Transform memT = gangTransforms[i];
+            Member memM = gangTransforms[i].GetComponent<Member>();
+            Animator memA = gangTransforms[i].GetComponent<Animator>();
 
-            gang.Members.Add(memberTransorm.GetComponent<Member>());
-            gang.Animators.Add(memberTransorm.GetComponent<Animator>());
+            Vector2 basePos = new Vector2(gang.Base.transform.position.x, gang.Base.transform.position.z);
+            Vector2 memberPos = basePos + memM.SetPosInBase(gang.Base);
+
+            memT.localPosition = new Vector3(memberPos.x, 0f, memberPos.y);
+
+            gang.MovableMembers.Add(new GangMember(memT,memM,memA));
         }
+        gang.AllGang = new List<GangMember>();
+        gang.AllGang.AddRange(gang.MovableMembers);
     }
 
     //Gang in altinda yurucegi base i olustur
     void SetBase()
     {
-        float radius = memberToLoad.localScale.x * memberCount;
+        float radius = memberToLoad.localScale.x * memberCount / 2f;
 
         Transform gangBase = transform.GetChild(0);
-        gangBase.localScale = new Vector3(radius, radius, radius);
+        gangBase.localScale = new Vector3(radius, radius / 2f, radius);
+        gangBase.localPosition = new Vector3(gangBase.transform.localPosition.x, gangBase.transform.localPosition.y + (gangBase.localScale.y), gangBase.transform.localPosition.z);
+
+        GameObject baseHead = new GameObject("BaseHead");
+        baseHead.transform.parent = gangBase;
+        baseHead.transform.localScale = baseHead.transform.localScale * 0.1f;
+
+        baseHead.transform.localPosition = new Vector3(0f, -1, 0.4f);
 
         gang.Base = gangBase;
     }
 
 
-
-
     private void OnTriggerEnter(Collider other)
     {
+
+        //tag karsilastirmanin hizli youlu.Layer daha iyi olabilir
         if (other.CompareTag("LadderObstacle"))
         {
-            DataScript.memberCollisionLock = true;
-            other.gameObject.tag = "UsedObject";
-            StartCoroutine(gangMovementScript.CreateLadder(10, (int)transform.lossyScale.y * 3, gangMovementScript.gangTransforms.Find(x => x.transform == transform), other.transform));                                       //gangMovementScript.gangTransforms[6]));                                  
+            DataManager.instance.currentGangState = GangState.Climbing;
+
+            other.tag = "UsedObject";
+            other.gameObject.layer = 9;
+
+            int ladderManCount = other.GetComponent<Obstacle>().manCount;
+
+            StartCoroutine(gangMovementScript.CreateLadder(gang, ladderManCount, other.transform));
+
+           //StartCoroutine(gangMovementScript.CreateLadder(10, 3, gangMovementScript.gangTransforms.Find(x => x.transform == transform), other.transform));   //gangMovementScript.gangTransforms[6]));                                  
         }
 
-        if (other.CompareTag("BridgeObstacle") && !DataScript.memberCollisionLock)
+        if (other.CompareTag("BridgeObstacle"))
         {
-            DataScript.memberCollisionLock = true;
-            other.gameObject.tag = "UsedObject";
-            StartCoroutine(gangMovementScript.CreateBridge(8, 3, gangMovementScript.gangTransforms.Find(x => x.transform == transform), other.transform));
+            DataManager.instance.currentGangState = GangState.Bridge;
+
+            other.tag = "UsedObject";
+            other.gameObject.layer = 9;
+
+            int bridgeManCount = other.GetComponent<Obstacle>().manCount;
+
+            StartCoroutine(gangMovementScript.CreateBridge(gang, bridgeManCount, other.transform));
+
+            //StartCoroutine(gangMovementScript.CreateBridge(8, 3, gangMovementScript.gangTransforms.Find(x => x.transform == transform), other.transform));
+        }
+
+        if (other.CompareTag("FinishLine"))
+        {
+            //uIScript.LevelPassed();
+            Debug.Log("Level Passed");
         }
     }
 }

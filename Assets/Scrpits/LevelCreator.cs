@@ -8,16 +8,5 @@ public class LevelCreator : MonoBehaviour
     void Awake()
     {
         dataManager = new DataManager();
-        DataScript.memberCollisionLock = false;
-        DataScript.inputLock = false;
-        DataScript.isGravityOpen = true;
-        Time.timeScale = 1f;
-
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 }

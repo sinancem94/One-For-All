@@ -2,66 +2,23 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UtmostInput;
+using System;
 
 public class GangMovementScript : MonoBehaviour
 {
-    private List<Animator> gangAnimators;
-    public List<Transform> gangTransforms;
-
-    private UIScript uIScript;
-    private CameraScript cameraScript;
-
-    private void Start()
+    void StopWalkingAnimation(MotherGang.Gang gang)
     {
-        cameraScript = FindObjectOfType(typeof(CameraScript)) as CameraScript;
-        uIScript = FindObjectOfType(typeof(UIScript)) as UIScript;
-
-        gangAnimators = new List<Animator>();
-        gangTransforms = new List<Transform>();
-
-        SetGangList();
-
-    }
-
- /*   void Update()
-    {
-
-        if(transform.childCount == 0)
+        foreach (MotherGang.GangMember gangMember in gang.MovableMembers)
         {
-            uIScript.GameOver();
-            Debug.Log("Game Over");
-        }
-        else
-        {
-            if (inputX.IsInput() && !DataScript.inputLock)
-            {
-                GeneralInput gInput = inputX.GetInput(0);
-                MoveTheGang(gInput);
-            }
-
-            else if (!DataScript.inputLock)      //this input lock is to make walking possible in ladder or bridge creating processes
-            {
-                foreach (Animator gangMemberAnim in gangAnimators)
-                {
-                    gangMemberAnim.SetBool("isWalking", false);
-                }
-            }
-        }
-    }*/
-
-    void StopWalkingAnimation()
-    {
-        foreach (Animator gangMemberAnim in gangAnimators)
-        {
-            gangMemberAnim.SetBool("isWalking", false);
+            gangMember.animator.SetBool("isWalking", false);
         }
     }
     
-    void StartWalkingAnimation()
+    void StartWalkingAnimation(MotherGang.Gang gang)
     {
-        foreach (Animator gangMemberAnim in gangAnimators)
+        foreach (MotherGang.GangMember gangMember in gang.MovableMembers)
         {
-            gangMemberAnim.SetBool("isWalking", true);
+            gangMember.animator.SetBool("isWalking", true);
         }
     }
 
@@ -71,29 +28,32 @@ public class GangMovementScript : MonoBehaviour
     {
         if (gInput.phase == IPhase.Began)
         {
-            touchStartPos = gInput.currentPosition;
+            touchStartPos = gInput.currentPosition;            
 
-            StartWalkingAnimation();
+            StartWalkingAnimation(gang);
+
+            DataManager.instance.currentGangState = MotherGang.GangState.Walking;
+
         }
         else if (gInput.phase == IPhase.Ended)
         {
             touchDelta = Vector2.zero;
+            StopWalkingAnimation(gang);
 
-            StopWalkingAnimation();
+            DataManager.instance.currentGangState = MotherGang.GangState.Idle;
         }
-        else if (gInput.phase == IPhase.Moved || gInput.phase == IPhase.Stationary)
+        else //if (gInput.phase == IPhase.Moved || gInput.phase == IPhase.Stationary)
         {
             touchDelta = (gInput.currentPosition - touchStartPos);
             touchStartPos = Vector2.MoveTowards(touchStartPos, gInput.currentPosition, Vector2.Distance(touchStartPos, gInput.currentPosition) / 50f);
 
             JoyStickMovement(gang.Base, touchDelta);
 
-            foreach (Transform memT in gang.Transforms)
+            foreach (MotherGang.GangMember mem in gang.MovableMembers)
             {
-                JoyStickMovement(memT,touchDelta);
+                mem.member.MoveTowards(gang.Base);
             }
         }
-
     }
 
 
@@ -108,140 +68,143 @@ public class GangMovementScript : MonoBehaviour
         lookPos.y = memberTransform.position.y;
 
         memberTransform.LookAt(lookPos);
-
-        // Quaternion targetRotation = Quaternion.LookRotation(posVec * 100f);
-        // transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, 35f);
     }
+
+
 
     //hepsini kapat bazılarını ac gravity icin
 
     //ladderlength is the length of the ladder which is decided by the member count to create the ladder
     //diffBtwLadderMembers is the how much should ladder increase in y direction which each step, difference between each one of the ladder members
     //as the firstMemberOfLadder we should send the first collided member of the gang to start creating ladder at its position
-    public IEnumerator CreateLadder(int ladderLength, int diffBtwLadderMembers, Transform firstMemberOfLadder, Transform lookPosition)
+    public IEnumerator CreateLadder(MotherGang.Gang gang, int ladderLength,Transform obstacle)
     {
-        DataScript.inputLock = true;
-        Vector3 memberPosInLadder;
-        Vector3 ladderStartPos = firstMemberOfLadder.position;
-        ladderStartPos.z -= 2f;     //change it do dynamic
-        memberPosInLadder = firstMemberOfLadder.position;
+        //memberPosInLadder i ayarla. Pozisyonu baseHead olcak.
+        Vector3 memberPosInLadder = gang.Base.GetChild(0).position;
+        //memberlar arasi y mesafesi
+        float yDistBtwMembers = gang.MovableMembers[0].transform.lossyScale.y * 3;
 
-        StopWalkingAnimation();
+        Vector3 ladderStartPos = memberPosInLadder;
+        ladderStartPos.y = gang.MovableMembers[0].transform.position.y;     //change it do dynamic
 
-        //firstMemberOfLadder.gameObject.GetComponent<Animator>().SetBool("isClimbing", true);
-        //firstMemberOfLadder.gameObject.GetComponent<Animator>().SetBool("isClimbFinished", true);
+        StopWalkingAnimation(gang);
 
-        //firstMemberOfLadder.parent = null;
-        SetGangList();
+        //copy movable members to temp and delete movables. 
+        List<MotherGang.GangMember> tmpMovables = new List<MotherGang.GangMember>(gang.MovableMembers.Count);
+
+        //temp listeyi olustur ve orijinal ini sil.
+        tmpMovables.AddRange(gang.MovableMembers);
+        gang.MovableMembers.Clear();
+
+        //Base in tirmanma sonunda nereye gelcegine karar ver. Sonra bi action ata ki merdiven bitince base yukari tasinsin
+        float yPos = obstacle.transform.position.y + (obstacle.transform.localScale.y / 2f) + (gang.Base.transform.localScale.y);
+        float zPos = obstacle.transform.position.z - (obstacle.transform.localScale.z / 2f) + (gang.Base.transform.localScale.z / 2f);
+
+        Vector3 newBasePosition = new Vector3(memberPosInLadder.x, yPos, zPos);
+
+        //Bu action son member merdiven oldugunda caigiriliyor (member.CreateLadder da null olarak gtmeyince sonunda cagiriliyor). Base i yukari tasiyor
+        Action moveBaseUpwards = delegate () { SetGangBasePosition(gang.Base, newBasePosition); };
 
         //for creating the ladder
         for (int i = 0; i < ladderLength; i++)
         {
-            if (i < gangTransforms.Count)
+            if (i < tmpMovables.Count)
             {
+                //sonuncu iteration sa bu corountine bitince base i yukari tasi
+                if(i == ladderLength - 1)
+                {
+                    tmpMovables[i].member.CreateLadder(gang, true, ladderStartPos, memberPosInLadder, moveBaseUpwards);
+                }
+                else
+                {
+                    tmpMovables[i].member.CreateLadder(gang, true, ladderStartPos, memberPosInLadder);
+                }
+
                 
-                StartCoroutine(gangTransforms[i].gameObject.GetComponent<MemberActions>().CreateLadder(true, ladderStartPos, memberPosInLadder, lookPosition));
-                memberPosInLadder.y = memberPosInLadder.y + diffBtwLadderMembers;
-                yield return new WaitForSecondsRealtime(0.5f);
+                tmpMovables.RemoveAt(i);
+                
+                memberPosInLadder.y = memberPosInLadder.y + yDistBtwMembers;
+                yield return new WaitForSecondsRealtime(UnityEngine.Random.Range(0.05f,0.2f));
             }
         }
 
-        //yield return new WaitForSecondsRealtime(2f);        //member actions bitince done tarzı bisey gönderip yapabiliriz. biri bitmeden diğerine baslamasın diye
-        //SetGangList();
-        memberPosInLadder.y += diffBtwLadderMembers;
+        //base i en uste tasidiktan sonra movable objeleri dolandirmaya basla
+        DataManager.instance.currentGangState = MotherGang.GangState.Idle;
 
         //for sending rest of the gang to the top of the ladder
-        if(ladderLength < gangTransforms.Count)
+        for (int i = 0; i < tmpMovables.Count; i++)
         {
-            for (int i = ladderLength; i < gangTransforms.Count; i++)
-            {
-                StartCoroutine(gangTransforms[i].gameObject.GetComponent<MemberActions>().CreateLadder(false, ladderStartPos, memberPosInLadder, lookPosition));
-                yield return new WaitForSecondsRealtime(0.5f);
-            }
+            tmpMovables[i].member.CreateLadder(gang, false, ladderStartPos, memberPosInLadder);
+            yield return new WaitForSecondsRealtime(UnityEngine.Random.Range(0.05f, 0.2f));
         }
-       
-        yield return new WaitForSecondsRealtime(3f);        //member actions bitince done tarzı bisey gönderip yapabiliriz. biri bitmeden diğerine baslamasın diye
-        DataScript.inputLock = false;
-        SetGangList();
-        DataScript.memberCollisionLock = false;
-        DataScript.isGravityOpen = true;
     }
 
-    public IEnumerator CreateBridge(int bridgeLength, int diffBtwBridgeMembers, Transform firstMemberOfBridge, Transform lookPosition)
+    public IEnumerator CreateBridge(MotherGang.Gang gang, int bridgeLength, Transform obstacle)
     {
-        DataScript.inputLock = true;
-        Vector3 memberPosInBridge;
-        Vector3 bridgeStartPos = firstMemberOfBridge.position;
-        bridgeStartPos.y += 2f;
-        memberPosInBridge = bridgeStartPos;
-        firstMemberOfBridge.position = bridgeStartPos;
-        bridgeStartPos.z -= 2f;     //change it do dynamic
-        
+        //memberPosInLadder i ayarla. Pozisyonu baseHead olcak.
+        Vector3 memberPosInBridge = gang.Base.GetChild(0).position;
+        memberPosInBridge.y = obstacle.position.y + (obstacle.localScale.y / 2f);
+        //memberlar arasi y mesafesi
+        float zDistBtwMembers = gang.MovableMembers[0].transform.lossyScale.y * 3;
 
-        foreach (Animator gangMemberAnim in gangAnimators)
-        {
-            gangMemberAnim.SetBool("isWalking", false);
-        }
+        Vector3 bridgeStartPos = memberPosInBridge;
+        bridgeStartPos.y = obstacle.position.y + (obstacle.localScale.y / 2f);
 
-        
-        Vector3 newLookPos = firstMemberOfBridge.transform.position;
-        newLookPos.y -= 5f;
-        firstMemberOfBridge.LookAt(newLookPos);
-        firstMemberOfBridge.gameObject.GetComponent<Animator>().SetBool("isClimbing", true);
-        firstMemberOfBridge.gameObject.GetComponent<Animator>().SetBool("isClimbFinished", true);
+        StopWalkingAnimation(gang);
 
-        firstMemberOfBridge.parent = null;
-        SetGangList();
+        //copy movable members to temp and delete movables. 
+        List<MotherGang.GangMember> tmpMovables = new List<MotherGang.GangMember>(gang.MovableMembers.Count);
+        //tmpMovables = gang.MovableMembers;
+
+        tmpMovables.AddRange(gang.MovableMembers);
+        gang.MovableMembers.Clear();
+
+        //Base in kopru kurma sonunda nereye gelcegine karar ver. Sonra bi action ata ki kopru bitince base ileri tasinsin
+        float zPos = obstacle.transform.position.z + (obstacle.transform.localScale.z / 2f) + (gang.Base.transform.localScale.z / 2f);
+        Vector3 newBasePosition = new Vector3(gang.Base.transform.position.x, gang.Base.transform.position.y, zPos);
+
+        //Bu action son member kopru oldugunda caigiriliyor (member.CreateBridge da null olarak gtmeyince sonunda cagiriliyor). Base i ileri (newBasePosition a) tasiyor
+        Action moveBaseForward = delegate () { SetGangBasePosition(gang.Base, newBasePosition); };
 
         //for creating the bridge
-        for (int i = 0; i < bridgeLength - 1; i++)
+        for (int i = 0; i < bridgeLength; i++)
         {
-            if (i < gangTransforms.Count)
+            if (i < tmpMovables.Count)
             {
-                memberPosInBridge.z = memberPosInBridge.z + diffBtwBridgeMembers;
-                StartCoroutine(gangTransforms[i].gameObject.GetComponent<MemberActions>().CreateBridge(true, bridgeStartPos, memberPosInBridge, lookPosition));
-                yield return new WaitForSecondsRealtime(0.5f);
+                //sonuncu iteration sa bu corountine bitince base i yukari tasi
+                if (i == bridgeLength - 1)
+                {
+                    tmpMovables[i].member.CreateBridge(gang, true, bridgeStartPos, memberPosInBridge, moveBaseForward);
+                }
+                else
+                {
+                    tmpMovables[i].member.CreateBridge(gang, true, bridgeStartPos, memberPosInBridge);
+                }
+
+                tmpMovables.RemoveAt(i);
+
+                memberPosInBridge.z = memberPosInBridge.z + zDistBtwMembers;
+                yield return new WaitForSecondsRealtime(UnityEngine.Random.Range(0.05f, 0.2f));
             }
         }
 
-        //yield return new WaitForSecondsRealtime(2f);        //member actions bitince done tarzı bisey gönderip yapabiliriz. biri bitmeden diğerine baslamasın diye
-        //SetGangList();
-        memberPosInBridge.z += diffBtwBridgeMembers;
+        //base i ileri tasidiktan sonra movable objeleri dolandirmaya basla
+        DataManager.instance.currentGangState = MotherGang.GangState.Idle;
 
-        //for sending rest of the gang to the top of the ladder
-        if (bridgeLength - 1 < gangTransforms.Count)
+        //for sending rest of the gang to pass the bridge
+        if (bridgeLength < tmpMovables.Count)
         {
-            for (int i = bridgeLength - 1; i < gangTransforms.Count; i++)
+            for (int i = 0; i < tmpMovables.Count; i++)
             {
-                StartCoroutine(gangTransforms[i].gameObject.GetComponent<MemberActions>().CreateBridge(false, bridgeStartPos, memberPosInBridge, lookPosition));
-                yield return new WaitForSecondsRealtime(0.5f);
+                tmpMovables[i].member.CreateBridge(gang, false, bridgeStartPos, memberPosInBridge);
+                yield return new WaitForSecondsRealtime(UnityEngine.Random.Range(0.05f, 0.2f));
             }
         }
-
-        yield return new WaitForSecondsRealtime(3f);        //member actions bitince done tarzı bisey gönderip yapabiliriz. biri bitmeden diğerine baslamasın diye
-        DataScript.inputLock = false;
-        SetGangList();
-        DataScript.memberCollisionLock = false;
-        DataScript.isGravityOpen = true;
     }
 
-    public void SetGangList()
+    void SetGangBasePosition(Transform gangBase, Vector3 pos)
     {
-        gangAnimators.Clear();
-        gangTransforms.Clear();
-
-        gangAnimators.AddRange(GetComponentsInChildren<Animator>());
-
-        foreach (Transform firstDepthChildT in gameObject.transform)
-        {
-            gangTransforms.Add(firstDepthChildT);
-        }
-
-        if(gangTransforms != null)
-        {
-            cameraScript.objectFollowedByCam = gangTransforms[0].gameObject;
-        }
-        
+        gangBase.transform.position = pos;
     }
 }
 

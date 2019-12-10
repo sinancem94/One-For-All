@@ -13,7 +13,6 @@ GameObject:
   - component: {fileID: 4357814258524094543}
   - component: {fileID: 4096944547612559606}
   - component: {fileID: 4809568256338554010}
-  - component: {fileID: 4043781880052579591}
   m_Layer: 8
   m_Name: GangMember
   m_TagString: GangMember
@@ -97,18 +96,6 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 80
   m_CollisionDetection: 0
---- !u!114 &4043781880052579591
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 124150470542241802}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0e5fa3976ce737a48bc2795cae311b02, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &331639127941879744
 GameObject:
   m_ObjectHideFlags: 0
