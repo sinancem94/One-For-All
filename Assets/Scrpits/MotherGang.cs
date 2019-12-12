@@ -21,6 +21,7 @@ public class MotherGang : MonoBehaviour
         public GangState currState;
         //gangin ustunde gitcegi base
         public Transform Base;
+        public Transform baseHead;
 
         public List<GangMember> MovableMembers;
 
@@ -48,6 +49,8 @@ public class MotherGang : MonoBehaviour
 
     void Start()
     {
+        DataManager.instance.SetMotherGang(this);
+
         //Create necessary objects
         inputX = new InputX();
         gangMovementScript = GetComponent<GangMovementScript>();
@@ -118,46 +121,87 @@ public class MotherGang : MonoBehaviour
         baseHead.transform.localPosition = new Vector3(0f, -1, 0.4f);
 
         gang.Base = gangBase;
+        gang.baseHead = baseHead.transform;
     }
 
 
     private void OnTriggerEnter(Collider other)
     {
-
         //tag karsilastirmanin hizli youlu.Layer daha iyi olabilir
         if (other.CompareTag("LadderObstacle"))
         {
             DataManager.instance.currentGangState = GangState.Climbing;
 
-            other.tag = "UsedObject";
-            other.gameObject.layer = 9;
+          //  other.tag = "UsedObject";
+          //  other.gameObject.layer = 9;
 
-            int ladderManCount = other.GetComponent<Obstacle>().manCount;
+            Obstacle ladder = other.GetComponent<Obstacle>();
 
-            StartCoroutine(gangMovementScript.CreateLadder(gang, ladderManCount, other.transform));
+            StartCoroutine(gangMovementScript.CreateLadder(gang, ladder.ManCount, ladder,Vector2.up));
 
            //StartCoroutine(gangMovementScript.CreateLadder(10, 3, gangMovementScript.gangTransforms.Find(x => x.transform == transform), other.transform));   //gangMovementScript.gangTransforms[6]));                                  
         }
-
-        if (other.CompareTag("BridgeObstacle"))
+        else if (other.CompareTag("BridgeObstacle"))
         {
             DataManager.instance.currentGangState = GangState.Bridge;
 
-            other.tag = "UsedObject";
-            other.gameObject.layer = 9;
+          //  other.tag = "UsedObject";
+          //  other.gameObject.layer = 9;
 
-            int bridgeManCount = other.GetComponent<Obstacle>().manCount;
+            Obstacle bridge = other.GetComponent<Obstacle>();
 
-            StartCoroutine(gangMovementScript.CreateBridge(gang, bridgeManCount, other.transform));
+            StartCoroutine(gangMovementScript.CreateBridge(gang, bridge.ManCount, bridge,Vector2.up));
 
             //StartCoroutine(gangMovementScript.CreateBridge(8, 3, gangMovementScript.gangTransforms.Find(x => x.transform == transform), other.transform));
         }
+        else if(other.CompareTag("MemberLadder"))
+        {
+            Obstacle createdLadder = other.GetComponent<Obstacle>();
 
-        if (other.CompareTag("FinishLine"))
+            if(createdLadder.isCloseToPassPoint(gang.baseHead.position))
+            {
+                DataManager.instance.currentGangState = GangState.Climbing;
+
+                Vector2 directionVec;
+
+                if (gang.Base.position.y < createdLadder.transform.position.y)
+                    directionVec = Vector2.up;
+                else
+                    directionVec = Vector2.down;
+
+                StartCoroutine(gangMovementScript.PassLadder(gang, createdLadder, directionVec));
+
+            }
+        }
+        else if (other.CompareTag("MemberBridge"))
+        {
+            Obstacle createdBridge = other.GetComponent<Obstacle>();
+
+            if (createdBridge.isCloseToPassPoint(gang.baseHead.position))
+            {
+                DataManager.instance.currentGangState = GangState.Climbing;
+
+                Vector2 directionVec;
+
+                if (gang.Base.position.z < createdBridge.transform.position.z)
+                    directionVec = Vector2.up;
+                else
+                    directionVec = Vector2.down;
+
+                StartCoroutine(gangMovementScript.PassBridge(gang, createdBridge, directionVec));
+
+            }
+        }
+        else if (other.CompareTag("FinishLine"))
         {
             //uIScript.LevelPassed();
             Debug.Log("Level Passed");
         }
+    }
+
+    public Gang GetGang()
+    {
+        return gang;
     }
 }
 

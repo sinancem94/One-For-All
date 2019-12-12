@@ -17,17 +17,27 @@ public class DataManager
         }
         else
         {
-           // Debug.LogError(ME + " already exist");
+            Debug.LogError(ME + " already exist");
         }
 
         LvlData getLevelData;
         getLevelData = new LvlData(1);
 
         levelData = getLevelData.GetLevelData();
-
     }
 
     public MotherGang.GangState currentGangState;
+    public MotherGang motherGang;
+
+    public MotherGang.Gang GetGang()
+    {
+        return motherGang.GetGang();
+    }
+
+    public void SetMotherGang(MotherGang gang)
+    {
+        this.motherGang = gang;
+    }
 
     //Current level data
     public struct LevelData

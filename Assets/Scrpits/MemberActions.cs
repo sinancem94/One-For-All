@@ -8,7 +8,7 @@ public class MemberActions
     float actionSpeed = 1.5f;
 
     //Members will call this function for climbing existing ladders. 
-    public IEnumerator ClimbLadder(MotherGang.GangMember member, Vector3 ladderStartPos, Vector3 memberPosInLadder, Action AddToMovables)
+    public IEnumerator ClimbLadder(MotherGang.GangMember member, Vector3 ladderStartPos, Vector3 memberPosInLadder, Action AddToMovables, Action setNewGangBasePostion = null)
     {
         member.transform.GetComponent<Rigidbody>().useGravity = false;
         member.transform.GetComponent<Collider>().isTrigger = true;
@@ -56,8 +56,13 @@ public class MemberActions
         member.transform.GetComponent<Rigidbody>().useGravity = true;
         member.transform.GetComponent<Collider>().isTrigger = false;
 
+        //eger member dolu geldiyse (ki gelmeli error basilabilir.) movable lara ekle
         if (AddToMovables != null)
             AddToMovables();
+
+        //eger bu obje belirlenen sirada cikan adamsa base pozisyonu ata
+        if (setNewGangBasePostion != null)
+            setNewGangBasePostion();
     }
 
     //This function is called from member to create ladder.
@@ -92,8 +97,6 @@ public class MemberActions
         member.animator.SetBool("isClimbFinished", true);
         member.animator.SetBool("isClimbing", false);
         
-        member.transform.parent = null;
-
         if (setNewGangBasePostion != null)
             setNewGangBasePostion();
     }
@@ -138,13 +141,12 @@ public class MemberActions
         newLookPos = member.transform.position;
         newLookPos.y -= 5;
         member.transform.LookAt(newLookPos);
-        member.transform.parent = null;
 
         if(setNewGangBasePostion != null)
             setNewGangBasePostion();
     }
 
-    public IEnumerator PassBridge(MotherGang.GangMember member, Vector3 bridgeStartPos, Vector3 memberPosInBridge, Action AddToMovables)
+    public IEnumerator PassBridge(MotherGang.GangMember member, Vector3 bridgeStartPos, Vector3 memberPosInBridge, Action AddToMovables, Action setNewGangBasePostion = null)
     {
         member.transform.GetComponent<Rigidbody>().useGravity = false;
         member.transform.GetComponent<Collider>().isTrigger = true;
@@ -190,5 +192,7 @@ public class MemberActions
 
         if (AddToMovables != null)
             AddToMovables();
+        if (setNewGangBasePostion != null)
+            setNewGangBasePostion();
     }
 }

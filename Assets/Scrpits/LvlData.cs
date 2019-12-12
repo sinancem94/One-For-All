@@ -28,7 +28,7 @@ public class LvlData
             GameObject ground = GameObject.FindGameObjectWithTag("Ground");
 
             memberCount = 25;
-            gangPosition = new Vector3(0f, ground.transform.position.y, 0f);
+            gangPosition = new Vector3(0f, ground.transform.position.y + 5f, 0f);
 
             
             break;

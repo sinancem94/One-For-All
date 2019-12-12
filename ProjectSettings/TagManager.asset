@@ -13,6 +13,8 @@ TagManager:
   - FinishLine
   - BridgeObstacle
   - HouseObstacle
+  - MemberLadder
+  - MemberBridge
   layers:
   - Default
   - TransparentFX
@@ -29,10 +31,10 @@ TagManager:
   - BridgeObstacle
   - HouseObstacle
   - Base
-  - 
-  - 
-  - 
-  - 
+  - LadderObstacle
+  - MemberLadder
+  - MemberBridge
+  - MotherGang
   - 
   - 
   - 

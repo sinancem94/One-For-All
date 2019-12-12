@@ -5,6 +5,9 @@ using System;
 
 public class Member : MonoBehaviour
 {
+    //member larin harekerini saglamak icin mutex. eger tirmanma veya kopru gecme vs islemindeyse lock la yoksa acik dursun
+    public bool memberLock;
+
     MemberActions actions;
 
     //ilk basta MotherGang de setleniyor
@@ -13,9 +16,23 @@ public class Member : MonoBehaviour
 
     void Start()
     {
+        memberLock = false;
+
         actions = new MemberActions();
 
         CloseRagdollPhysics();
+    }
+
+    private void Update()
+    {
+        if(!memberLock && (DataManager.instance.currentGangState == MotherGang.GangState.Walking || DataManager.instance.currentGangState == MotherGang.GangState.Idle))
+        {
+            MoveTowards();
+        }
+        else
+        {
+            positionInBase = SetNewPosition(DataManager.instance.GetGang().Base);
+        }
     }
 
     void OpenRagdollPhysics()
@@ -61,82 +78,69 @@ public class Member : MonoBehaviour
         }
     }
 
+    #region LadderClimbing
     //Bunlari ayirdim cunku bazen sadece merdiven tirmandirmak isticegimiz durumlar olabilir
-    public void CreateLadder(MotherGang.Gang gang, bool isLadder, Vector3 ladderPos, Vector3 positionInLadder, Action SetBasePosition = null)
+    public void CreateLadder(MotherGang.Gang gang, Vector3 ladderPos, Vector3 positionInLadder, Action SetBasePosition = null)
     {
         MotherGang.GangMember member = gang.AllGang.Find(mem => mem.member == this);
-
-        if (isLadder)
-        {
-            BeLadder(gang, member, ladderPos, positionInLadder,SetBasePosition);
-        }
-        else
-        {
-            ClimbLadder(gang, member, ladderPos, positionInLadder);
-        }
-    }
-
-    void BeLadder(MotherGang.Gang gang, MotherGang.GangMember member, Vector3 ladderPos, Vector3 positionInLadder, Action SetBasePosition)
-    {
         //Eger member movable ise cikar ordan
         RemoveMemberFromMovables(gang);
 
         StartCoroutine(actions.CreateLadder(member, ladderPos, positionInLadder, SetBasePosition));
     }
 
-    public void ClimbLadder(MotherGang.Gang gang, MotherGang.GangMember member, Vector3 ladderPos, Vector3 positionInLadder)
+    public void ClimbLadder(MotherGang.Gang gang, Vector3 ladderPos, Vector3 positionInLadder, Action SetBasePosition = null)
     {
+        MotherGang.GangMember member = gang.AllGang.Find(mem => mem.member == this);
+
         //At the end add this member to movables
         //Bu action action.ClimbLadder bitince cagiriliyor. Member i yeniden movable lara ekliyor
-        Action addToMovables = delegate () { AddMemberToMovables(gang); };
+        Action addToMovables = delegate () { AddMemberToMovables(gang);};
 
         //Eger member movable ise cikar ordan
         RemoveMemberFromMovables(gang);
 
-        StartCoroutine(actions.ClimbLadder(member, ladderPos, positionInLadder,addToMovables));
+        StartCoroutine(actions.ClimbLadder(member, ladderPos, positionInLadder,addToMovables, SetBasePosition));
     }
+    #endregion
 
 
-    //Bunlari ayirdim cunku bazen sadece kopru gecirmek isticegimiz durumlar olabilir
-    public void CreateBridge(MotherGang.Gang gang, bool isBridge, Vector3 bridgePos, Vector3 positionInBridge, Action SetBasePosition = null)
+    #region BridgePassing
+    //Bunlari ayirdim cunku bazen sadece kopru gecirmek gerekli durumlar olabilir
+    public void CreateBridge(MotherGang.Gang gang, Vector3 bridgePos, Vector3 positionInBridge, Action SetBasePosition = null)
     {
         MotherGang.GangMember member = gang.AllGang.Find(mem => mem.member == this);
 
-        if (isBridge)
-        {
-            BeBridge(gang, member, bridgePos, positionInBridge, SetBasePosition);
-        }
-        else
-        {
-            PassBridge(gang, member, bridgePos, positionInBridge);
-        }
-    }
-
-    void BeBridge(MotherGang.Gang gang, MotherGang.GangMember member, Vector3 ladderPos, Vector3 positionInLadder, Action SetBasePosition)
-    {
         RemoveMemberFromMovables(gang);
 
-        StartCoroutine(actions.CreateBridge(member, ladderPos, positionInLadder,SetBasePosition));
+        StartCoroutine(actions.CreateBridge(member, bridgePos, positionInBridge, SetBasePosition));
     }
 
-    void PassBridge(MotherGang.Gang gang, MotherGang.GangMember member, Vector3 ladderPos, Vector3 positionInLadder)
+    public void PassBridge(MotherGang.Gang gang, Vector3 bridgePos, Vector3 positionInLadder, Action SetBasePosition = null)
     {
+        MotherGang.GangMember member = gang.AllGang.Find(mem => mem.member == this);
+
         //At the end add this member to movables
         Action addToMovables = delegate () { AddMemberToMovables(gang); };
 
         RemoveMemberFromMovables(gang);
 
-        StartCoroutine(actions.PassBridge(member, ladderPos, positionInLadder, addToMovables));
+        StartCoroutine(actions.PassBridge(member, bridgePos, positionInLadder, addToMovables, SetBasePosition));
     }
-
+    #endregion
 
     public void AddMemberToMovables(MotherGang.Gang gang)
     {
         //eger liste de degil ise ekle 
         if (gang.MovableMembers.Exists(mem => mem.member == this) == false)
         {
+            memberLock = false;
+
             MotherGang.GangMember member = gang.AllGang.Find(mem => mem.member == this);
             gang.MovableMembers.Add(member);
+
+            if (DataManager.instance.currentGangState == MotherGang.GangState.Walking)
+                member.animator.SetBool("isWalking", true);
         }
     }
 
@@ -145,6 +149,8 @@ public class Member : MonoBehaviour
         //eger bu liste de var ise cikar
         if (gang.MovableMembers.Exists(mem => mem.member == this))
         {
+            memberLock = true;
+
             MotherGang.GangMember member = gang.MovableMembers.Find(mem => mem.member == this);
             gang.MovableMembers.Remove(member);
         }
@@ -154,26 +160,26 @@ public class Member : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("WreckingBall"))
         {
-            Debug.Log("wreckk");
+            RemoveMemberFromMovables(DataManager.instance.GetGang());
             OpenRagdollPhysics();
         }
     }
     
-    Vector3 SetNewPosition(Transform gangBase)
+    public Vector3 SetNewPosition(Transform gangBase)
     {
         Vector2 basePos = new Vector2(gangBase.transform.position.x, gangBase.transform.position.z);
         Vector2 memberPos = basePos + RandomPosInBase;
 
-        positionInBase = new Vector3(memberPos.x, 0f , memberPos.y);
+        positionInBase = new Vector3(memberPos.x, gangBase.localPosition.y - (gangBase.localScale.y), memberPos.y);
         return positionInBase;
     }
 
-    public void MoveTowards(Transform gangBase)
+    void MoveTowards()
     {
-        positionInBase = SetNewPosition(gangBase);
+        //Calculate the delta
+        float delta = Mathf.Abs(Vector3.Distance(transform.localPosition, positionInBase)) * 0.09f;
 
-        float delta = Vector2.Distance(transform.localPosition, positionInBase) * 0.5f;
-        transform.localPosition = Vector3.MoveTowards(transform.localPosition, positionInBase,0.5f);
+        transform.localPosition = Vector3.MoveTowards(transform.localPosition, positionInBase,delta);
 
         Vector3 lookPos = positionInBase;
         lookPos.y = transform.position.y;
