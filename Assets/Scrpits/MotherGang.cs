@@ -13,7 +13,9 @@ public class MotherGang : MonoBehaviour
         Idle = 0,
         Walking,
         Climbing,
-        Bridge
+        Bridge,
+        LevelPassed,
+        GameOver
     };
 
     public struct Gang
@@ -23,9 +25,14 @@ public class MotherGang : MonoBehaviour
         public Transform Base;
         public Transform baseHead;
 
+        //Dynamic List . When climbing, building ladder etc. this list will be cleared and remaning movableMembers will be added one by one
         public List<GangMember> MovableMembers;
 
+        //Movable member larin tumu. Eger bir member olduyse veya kopru, merdiven vs olduysa burdan cikar
         public List<GangMember> AllGang;
+
+        public Collision collision;
+        public Collider collider;
     }
 
     public struct GangMember
@@ -49,8 +56,6 @@ public class MotherGang : MonoBehaviour
 
     void Start()
     {
-        DataManager.instance.SetMotherGang(this);
-
         //Create necessary objects
         inputX = new InputX();
         gangMovementScript = GetComponent<GangMovementScript>();
@@ -71,10 +76,17 @@ public class MotherGang : MonoBehaviour
         CreateMembers();
     }
 
+    private void LateUpdate()
+    {
+        if (DataManager.instance.State == DataManager.GameState.Play && gang.AllGang.Count == 0)
+        {
+            DataManager.instance.GameOver();
+        }
+    }
+
     private void Update()
     {
-        
-       if (inputX.IsInput() && (DataManager.instance.currentGangState != GangState.Climbing && DataManager.instance.currentGangState != GangState.Bridge))
+       if (inputX.IsInput() && (DataManager.instance.currentGangState == GangState.Walking || DataManager.instance.currentGangState == GangState.Idle))
        {
             GeneralInput gInput = inputX.GetInput(0);
 
@@ -95,12 +107,13 @@ public class MotherGang : MonoBehaviour
             Animator memA = gangTransforms[i].GetComponent<Animator>();
 
             Vector2 basePos = new Vector2(gang.Base.transform.position.x, gang.Base.transform.position.z);
-            Vector2 memberPos = basePos + memM.SetPosInBase(gang.Base);
+            Vector2 memberPos = basePos + memM.SetRandomPositionInBase(gang.Base);
 
             memT.localPosition = new Vector3(memberPos.x, 0f, memberPos.y);
 
             gang.MovableMembers.Add(new GangMember(memT,memM,memA));
         }
+
         gang.AllGang = new List<GangMember>();
         gang.AllGang.AddRange(gang.MovableMembers);
     }
@@ -122,6 +135,8 @@ public class MotherGang : MonoBehaviour
 
         gang.Base = gangBase;
         gang.baseHead = baseHead.transform;
+
+        gang.collider = gang.Base.GetChild(0).GetComponent<Collider>();
     }
 
 
@@ -132,9 +147,6 @@ public class MotherGang : MonoBehaviour
         {
             DataManager.instance.currentGangState = GangState.Climbing;
 
-          //  other.tag = "UsedObject";
-          //  other.gameObject.layer = 9;
-
             Obstacle ladder = other.GetComponent<Obstacle>();
 
             StartCoroutine(gangMovementScript.CreateLadder(gang, ladder.ManCount, ladder,Vector2.up));
@@ -144,9 +156,6 @@ public class MotherGang : MonoBehaviour
         else if (other.CompareTag("BridgeObstacle"))
         {
             DataManager.instance.currentGangState = GangState.Bridge;
-
-          //  other.tag = "UsedObject";
-          //  other.gameObject.layer = 9;
 
             Obstacle bridge = other.GetComponent<Obstacle>();
 
@@ -194,8 +203,25 @@ public class MotherGang : MonoBehaviour
         }
         else if (other.CompareTag("FinishLine"))
         {
-            //uIScript.LevelPassed();
+            DataManager.instance.LevelPassed();
             Debug.Log("Level Passed");
+        }
+    }
+    
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.layer == LayerMask.NameToLayer("HouseObstacle"))
+        {
+            //Debug.Log("anan");
+            gang.collision = collision;
+        }
+    }
+
+    private void OnCollisionExit(Collision collision)
+    {
+        if (collision.gameObject.layer == LayerMask.NameToLayer("HouseObstacle"))
+        {
+            gang.collision = null;
         }
     }
 

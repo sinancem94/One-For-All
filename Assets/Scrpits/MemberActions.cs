@@ -56,13 +56,12 @@ public class MemberActions
         member.transform.GetComponent<Rigidbody>().useGravity = true;
         member.transform.GetComponent<Collider>().isTrigger = false;
 
-        //eger member dolu geldiyse (ki gelmeli error basilabilir.) movable lara ekle
-        if (AddToMovables != null)
-            AddToMovables();
-
         //eger bu obje belirlenen sirada cikan adamsa base pozisyonu ata
         if (setNewGangBasePostion != null)
             setNewGangBasePostion();
+        //eger member dolu geldiyse (ki gelmeli error basilabilir.) movable lara ekle
+        if (AddToMovables != null)
+            AddToMovables();
     }
 
     //This function is called from member to create ladder.
@@ -190,9 +189,9 @@ public class MemberActions
         member.transform.GetComponent<Rigidbody>().useGravity = true;
         member.transform.GetComponent<Collider>().isTrigger = false;
 
-        if (AddToMovables != null)
-            AddToMovables();
         if (setNewGangBasePostion != null)
             setNewGangBasePostion();
+        if (AddToMovables != null)
+            AddToMovables();
     }
 }

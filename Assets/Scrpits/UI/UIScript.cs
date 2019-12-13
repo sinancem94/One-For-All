@@ -17,12 +17,10 @@ public class UIScript : MonoBehaviour
     public void GameOver()
     {
         gameOverPanel.SetActive(true);
-        Time.timeScale = 0;
     }
 
     public void LevelPassed()
     {
         levelPassedPanel.SetActive(true);
-        Time.timeScale = 0;
     }
 }

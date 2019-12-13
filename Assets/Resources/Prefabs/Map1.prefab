@@ -14,7 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ObstacleType: 1
   ManCount: 9
-  ObstacleMembers: {fileID: 0}
+  MemberPass: {fileID: 0}
+  ObstacleMembers:
+  - {fileID: 0}
+  passStartMember: {fileID: 0}
+  passEndMember: {fileID: 0}
 --- !u!1 &8285815963593223139
 GameObject:
   m_ObjectHideFlags: 0
@@ -223,7 +227,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8285815963683527901}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 55.292507, y: -25.093184, z: 76.478134}
+  m_LocalPosition: {x: 55.292507, y: -30, z: 76.478134}
   m_LocalScale: {x: 20, y: 20, z: 20}
   m_Children:
   - {fileID: 8285815964082429518}
@@ -1681,7 +1685,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ObstacleType: 2
   ManCount: 7
-  ObstacleMembers: {fileID: 0}
+  MemberPass: {fileID: 0}
+  ObstacleMembers:
+  - {fileID: 0}
+  passStartMember: {fileID: 0}
+  passEndMember: {fileID: 0}
 --- !u!1 &8285815964082429514
 GameObject:
   m_ObjectHideFlags: 0

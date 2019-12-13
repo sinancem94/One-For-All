@@ -26,6 +26,20 @@ public class GangMovementScript : MonoBehaviour
     Vector2 touchDelta;
     public void MoveTheGang(GeneralInput gInput, MotherGang.Gang gang)
     {
+        int LockMovement; //0 collision yok. 1 sag da var. -1 sol da var
+
+        if(gang.collision != null)
+        {
+            Vector3 contactPoint = gang.collision.GetContact(0).point;
+            Vector3 center = gang.collider.bounds.center;
+
+            LockMovement = (contactPoint.x > center.x) ? 1 : -1;
+        }
+        else
+        {
+            LockMovement = 0;
+        }
+
         if (gInput.phase == IPhase.Began)
         {
             touchStartPos = gInput.currentPosition;            
@@ -47,12 +61,17 @@ public class GangMovementScript : MonoBehaviour
             touchDelta = (gInput.currentPosition - touchStartPos);
             touchStartPos = Vector2.MoveTowards(touchStartPos, gInput.currentPosition, Vector2.Distance(touchStartPos, gInput.currentPosition) / 50f);
 
-            JoyStickMovement(gang.Base, touchDelta);
 
-            foreach (MotherGang.GangMember mem in gang.MovableMembers)
+            //bu yapiyi komple degistir cop oldu
+            if(LockMovement != 0)
             {
-                mem.member.SetNewPosition(gang.Base);
+                if(LockMovement == 1)
+                    touchDelta.x = (touchDelta.x > 0) ? 0 : touchDelta.x;
+                else
+                    touchDelta.x = (touchDelta.x < 0) ? 0 : touchDelta.x;
             }
+
+            JoyStickMovement(gang.Base, touchDelta);
         }
     }
 
@@ -80,12 +99,30 @@ public class GangMovementScript : MonoBehaviour
 
     public IEnumerator PassLadder(MotherGang.Gang gang, Obstacle ladder, Vector2 directionVec)
     {
-        Vector3 ladderStartPosition = ladder.passStartPoisition;
+
+        Vector3 ladderEndPoint;
+        Vector3 ladderStartPosition;
 
         LockAllMembers(gang);
         StopWalkingAnimation(gang);
 
         int direction = (directionVec.y == 1) ? 1 : -1;
+
+        if (direction == 1)
+        {
+            ladderEndPoint = ladder.passEndMember.position;
+            ladderEndPoint.y = ladder.transform.position.y + (ladder.transform.localScale.y / 2f);
+
+            ladderStartPosition = ladder.passStartMember.position;
+        }
+        else
+        {
+            ladderEndPoint = ladder.passStartMember.position;
+            ladderEndPoint.y = ladder.transform.position.y + (ladder.transform.localScale.y / 2f);
+
+            ladderStartPosition = ladder.passEndMember.position;
+        }
+
         //Base in tirmanma sonunda nereye gelcegine karar ver. Sonra bi action ata ki merdiven bitince base yukari tasinsin
         float yPos = ladder.transform.position.y + (ladder.transform.localScale.y / 2f * direction) + (gang.Base.transform.localScale.y);
         float zPos = ladder.transform.position.z - (ladder.transform.localScale.z / 2f) + (gang.Base.transform.localScale.z / 2f);
@@ -110,11 +147,11 @@ public class GangMovementScript : MonoBehaviour
         {
             if(i == 0)
             {
-                tmpMovables[i].member.ClimbLadder(gang, ladderStartPosition, newBasePosition, moveBase);
+                tmpMovables[i].member.ClimbLadder(gang, ladderStartPosition, ladderEndPoint, moveBase);
             }
             else
             {
-                tmpMovables[i].member.ClimbLadder(gang, ladderStartPosition, newBasePosition);
+                tmpMovables[i].member.ClimbLadder(gang, ladderStartPosition, ladderEndPoint);
             }
             yield return new WaitForSecondsRealtime(UnityEngine.Random.Range(0.05f, 0.2f));
         }
@@ -123,12 +160,29 @@ public class GangMovementScript : MonoBehaviour
 
     public IEnumerator PassBridge(MotherGang.Gang gang, Obstacle bridge, Vector2 directionVec)
     {
-        Vector3 bridgeStartPosition = bridge.passStartPoisition;
+        Vector3 bridgeEndPoint;
+        Vector3 bridgeStartPosition;
 
         LockAllMembers(gang);
         StopWalkingAnimation(gang);
 
+        //Directiona gore -1 ya da 1
         int direction = (directionVec.y == 1) ? 1 : -1;
+
+        if(direction == 1)
+        {
+            bridgeEndPoint = bridge.passEndMember.position;
+            bridgeEndPoint.y = bridge.transform.position.y + (bridge.transform.localScale.y / 2f);
+
+            bridgeStartPosition = bridge.passStartMember.position;
+        }
+        else
+        {
+            bridgeEndPoint = bridge.passStartMember.position;
+            bridgeEndPoint.y = bridge.transform.position.y + (bridge.transform.localScale.y / 2f);
+
+            bridgeStartPosition = bridge.passEndMember.position;
+        }
       
         //Base in kopru kurma sonunda nereye gelcegine karar ver. Sonra bi action ata ki kopru bitince base ileri tasinsin
         float zPos = bridge.transform.position.z + (bridge.transform.localScale.z / 2f * direction) + (gang.Base.transform.localScale.z / 2f);
@@ -153,11 +207,11 @@ public class GangMovementScript : MonoBehaviour
         {
             if (i == 0)
             {
-                tmpMovables[i].member.PassBridge(gang, bridgeStartPosition, newBasePosition, moveBase);
+                tmpMovables[i].member.PassBridge(gang, bridgeStartPosition, bridgeEndPoint, moveBase);
             }
             else
             {
-                tmpMovables[i].member.PassBridge(gang, bridgeStartPosition, newBasePosition);//(gang, false, ladderStartPos, memberPosInLadder);
+                tmpMovables[i].member.PassBridge(gang, bridgeStartPosition, bridgeEndPoint);//(gang, false, ladderStartPos, memberPosInLadder);
             }
             yield return new WaitForSecondsRealtime(UnityEngine.Random.Range(0.05f, 0.2f));
         }
@@ -220,13 +274,14 @@ public class GangMovementScript : MonoBehaviour
             DataManager.instance.currentGangState = MotherGang.GangState.Idle;
         };
 
+
         //for creating the ladder
         for (int i = 0; i < ladderLength; i++)
         {
             if (i < tmpMovables.Count)
             {
                 //sonuncu iteration sa bu corountine bitince base i yukari tasi
-                if(i == ladderLength - 1)
+                if (i == ladderLength - 1)
                 {
                     tmpMovables[i].member.CreateLadder(gang, ladderStartPos, memberPosInLadder, moveBase);
                 }
@@ -234,18 +289,17 @@ public class GangMovementScript : MonoBehaviour
                 {
                     tmpMovables[i].member.CreateLadder(gang, ladderStartPos, memberPosInLadder);
                 }
-
+               
                 ladderMembers.Add(tmpMovables[i]);
-                tmpMovables.RemoveAt(i);
-
-
+                
                 memberPosInLadder.y = memberPosInLadder.y + yDistBtwMembers;
+
                 yield return new WaitForSecondsRealtime(UnityEngine.Random.Range(0.05f,0.2f));
             }
         }
 
+        tmpMovables.RemoveRange(0, ladderLength);
         ladder.CreateObstacleMembers(ladderMembers);
-        
 
         //for sending rest of the gang to the top of the ladder
         for (int i = 0; i < tmpMovables.Count; i++)
@@ -253,6 +307,8 @@ public class GangMovementScript : MonoBehaviour
             tmpMovables[i].member.ClimbLadder(gang, ladderStartPos, memberPosInLadder);//(gang, false, ladderStartPos, memberPosInLadder);
             yield return new WaitForSecondsRealtime(UnityEngine.Random.Range(0.05f, 0.2f));
         }
+
+        gang.AllGang.RemoveRange(0, ladderLength);
     }
 
     /// <summary>
@@ -307,7 +363,6 @@ public class GangMovementScript : MonoBehaviour
 
         List<MotherGang.GangMember> ladderMembers = new List<MotherGang.GangMember>(bridgeLength);
 
-
         //for creating the bridge
         for (int i = 0; i < bridgeLength; i++)
         {
@@ -324,16 +379,14 @@ public class GangMovementScript : MonoBehaviour
                 }
 
                 ladderMembers.Add(tmpMovables[i]);
-                tmpMovables.RemoveAt(i);
 
                 memberPosInBridge.z = memberPosInBridge.z + zDistBtwMembers;
                 yield return new WaitForSecondsRealtime(UnityEngine.Random.Range(0.05f, 0.2f));
             }
         }
 
+        tmpMovables.RemoveRange(0, bridgeLength);
         bridge.CreateObstacleMembers(ladderMembers);
-
-       
 
         //for sending rest of the gang to pass the bridge
         if (bridgeLength < tmpMovables.Count)
@@ -344,6 +397,8 @@ public class GangMovementScript : MonoBehaviour
                 yield return new WaitForSecondsRealtime(UnityEngine.Random.Range(0.05f, 0.2f));
             }
         }
+
+        gang.AllGang.RemoveRange(0, bridgeLength);
     }
 
     void SetGangBasePosition(Transform gangBase, Vector3 pos)

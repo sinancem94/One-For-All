@@ -26,10 +26,10 @@ public class Obstacle : MonoBehaviour
 
     [HideInInspector]
     //Ladder, bridge etc nin ilk basta kuruldugu pozisyon
-    public Vector3 passStartPoisition;
+    public Transform passStartMember;
     [HideInInspector]
     //Ladder, bridge etc nin en son memberin pozisyonu 
-    public Vector3 passEndPosition;
+    public Transform passEndMember;
 
     private void Start()
     {
@@ -82,14 +82,17 @@ public class Obstacle : MonoBehaviour
             usedMember.transform.parent = MemberPass.transform;
         }
 
-        passEndPosition = usedMembers[usedMembers.Count - 1].transform.localPosition;
-        passStartPoisition = usedMembers[0].transform.localPosition;
+        passEndMember = usedMembers[usedMembers.Count - 1].transform;
+        passStartMember = usedMembers[0].transform;
+
+        //Debug.Log(passStartMember + "  " + passEndMember);
+
     }
 
     //eger gang pass in oldugu pozisyona yakinsa ve usedObstacle a carpiyorsa true don
     public bool isCloseToPassPoint(Vector3 gangPosition)
     {
-        if (Mathf.Abs(Vector3.Distance(gangPosition, passStartPoisition)) <= 5f || Mathf.Abs(Vector3.Distance(gangPosition, passEndPosition)) <= 5f)
+        if (Mathf.Abs(Vector3.Distance(gangPosition, passStartMember.position)) <= 5f || Mathf.Abs(Vector3.Distance(gangPosition, passStartMember.position)) <= 5f)
             return true;
 
         return false;
