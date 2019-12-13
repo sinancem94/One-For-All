@@ -95,7 +95,7 @@ public class Member : MonoBehaviour
 
         //At the end add this member to movables
         //Bu action action.ClimbLadder bitince cagiriliyor. Member i yeniden movable lara ekliyor
-        Action addToMovables = delegate () { AddMemberToMovables(gang);};
+        Action addToMovables = delegate () { AddMemberToMovables(gang,member);};
 
         //Eger member movable ise cikar ordan
         RemoveMemberFromMovables(gang);
@@ -121,7 +121,7 @@ public class Member : MonoBehaviour
         MotherGang.GangMember member = gang.AllGang.Find(mem => mem.member == this);
 
         //At the end add this member to movables
-        Action addToMovables = delegate () { AddMemberToMovables(gang); };
+        Action addToMovables = delegate () { AddMemberToMovables(gang,member); };
 
         RemoveMemberFromMovables(gang);
 
@@ -143,6 +143,25 @@ public class Member : MonoBehaviour
                 member.animator.SetBool("isWalking", true);
 
             if(gang.AllGang.Exists(mem => mem.member == this) == false)
+            {
+                gang.AllGang.Add(member);
+            }
+
+        }
+    }
+
+    public void AddMemberToMovables(MotherGang.Gang gang, MotherGang.GangMember member)
+    {
+        //eger liste de degil ise ekle 
+        if (gang.MovableMembers.Exists(mem => mem.member == this) == false)
+        {
+            memberLock = false;
+            gang.MovableMembers.Add(member);
+
+            if (DataManager.instance.currentGangState == MotherGang.GangState.Walking)
+                member.animator.SetBool("isWalking", true);
+
+            if (gang.AllGang.Exists(mem => mem.member == this) == false)
             {
                 gang.AllGang.Add(member);
             }
