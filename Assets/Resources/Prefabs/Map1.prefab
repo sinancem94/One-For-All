@@ -1,5 +1,58 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &4780674829079694845
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4230573252510560536}
+  - component: {fileID: 7494730056070104094}
+  - component: {fileID: 2438230524184335854}
+  m_Layer: 13
+  m_Name: Collider
+  m_TagString: HouseObstacle
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4230573252510560536
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4780674829079694845}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.9, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 5, z: 15}
+  m_Children: []
+  m_Father: {fileID: 8285815963683527902}
+  m_RootOrder: 56
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!33 &7494730056070104094
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4780674829079694845}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!65 &2438230524184335854
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4780674829079694845}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &5552672214832654564
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17,8 +70,8 @@ MonoBehaviour:
   MemberPass: {fileID: 0}
   ObstacleMembers:
   - {fileID: 0}
-  passStartMember: {fileID: 0}
-  passEndMember: {fileID: 0}
+  passStartMember: {x: 0, y: 0, z: 0}
+  passEndMember: {x: 0, y: 0, z: 0}
 --- !u!1 &8285815963593223139
 GameObject:
   m_ObjectHideFlags: 0
@@ -227,7 +280,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8285815963683527901}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 55.292507, y: -30, z: 76.478134}
+  m_LocalPosition: {x: 55.292507, y: -25, z: 76.478134}
   m_LocalScale: {x: 20, y: 20, z: 20}
   m_Children:
   - {fileID: 8285815964082429518}
@@ -286,8 +339,10 @@ Transform:
   - {fileID: 8285815965199727422}
   - {fileID: 8285815963720737693}
   - {fileID: 8285815964098588555}
+  - {fileID: 4230573252510560536}
+  - {fileID: 4115706154813565224}
   m_Father: {fileID: 8285815964835550312}
-  m_RootOrder: 2
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &8285815963712974967
 GameObject:
@@ -1424,7 +1479,7 @@ Transform:
   m_LocalScale: {x: 13, y: 1, z: 50}
   m_Children: []
   m_Father: {fileID: 8285815964835550312}
-  m_RootOrder: 3
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &8285815963995228149
 MeshFilter:
@@ -1688,8 +1743,8 @@ MonoBehaviour:
   MemberPass: {fileID: 0}
   ObstacleMembers:
   - {fileID: 0}
-  passStartMember: {fileID: 0}
-  passEndMember: {fileID: 0}
+  passStartMember: {x: 0, y: 0, z: 0}
+  passEndMember: {x: 0, y: 0, z: 0}
 --- !u!1 &8285815964082429514
 GameObject:
   m_ObjectHideFlags: 0
@@ -3375,10 +3430,10 @@ Transform:
   m_Children:
   - {fileID: 4439840706653752031}
   - {fileID: 8285815964062990888}
-  - {fileID: 8285815963683527902}
   - {fileID: 8285815963995228150}
   - {fileID: 9215728312302417130}
   - {fileID: 8285815965514026230}
+  - {fileID: 8285815963683527902}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -4701,7 +4756,7 @@ Transform:
   m_LocalScale: {x: 130, y: 1, z: 10}
   m_Children: []
   m_Father: {fileID: 8285815964835550312}
-  m_RootOrder: 5
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &8285815965514026229
 MeshFilter:
@@ -5590,6 +5645,59 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!1 &8681440219907814515
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4115706154813565224}
+  - component: {fileID: 3460370628280519135}
+  - component: {fileID: 9184812649597608158}
+  m_Layer: 13
+  m_Name: Collider (1)
+  m_TagString: HouseObstacle
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4115706154813565224
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8681440219907814515}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -4.41, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 5, z: 15}
+  m_Children: []
+  m_Father: {fileID: 8285815963683527902}
+  m_RootOrder: 57
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!33 &3460370628280519135
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8681440219907814515}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!65 &9184812649597608158
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8681440219907814515}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1001 &1471371993099727820
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5640,7 +5748,7 @@ PrefabInstance:
     - target: {fileID: 7750559832664524582, guid: 00fadbf5f93478f4ab656aa3f17fe252,
         type: 3}
       propertyPath: m_RootOrder
-      value: 4
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 7750559832664524582, guid: 00fadbf5f93478f4ab656aa3f17fe252,
         type: 3}

@@ -29,7 +29,7 @@ public class Member : MonoBehaviour
     private void Update()
     {
         SetNewPosition(DataManager.instance.GetGang().Base);
-        if (!memberLock && (DataManager.instance.currentGangState == MotherGang.GangState.Walking || DataManager.instance.currentGangState == MotherGang.GangState.Idle))
+        if (!memberLock && (DataManager.instance.currentGangState == DataManager.GangState.Walking || DataManager.instance.currentGangState == DataManager.GangState.Idle))
         {
             MoveTowards(positionInBase);
         }
@@ -78,76 +78,32 @@ public class Member : MonoBehaviour
         }
     }
 
-    #region LadderClimbing
-    //Bunlari ayirdim cunku bazen sadece merdiven tirmandirmak isticegimiz durumlar olabilir
-    public void CreateLadder(MotherGang.Gang gang, Vector3 ladderPos, Vector3 positionInLadder, Action SetBasePosition = null)
+    public void CreateObstaclePass(MotherGang.Gang gang, Obstacle obstacle, Vector3 passStartPos, Vector3 memberPosInPass, Action SetBasePosition = null)
     {
         MotherGang.GangMember member = gang.AllGang.Find(mem => mem.member == this);
         //Eger member movable ise cikar ordan
         RemoveMemberFromMovables(gang);
 
-        StartCoroutine(actions.CreateLadder(member, ladderPos, positionInLadder, SetBasePosition));
+        //if bridge set as -1 . member will look downwards
+        //if ladder set as 0. will not call LookAt for member 
+        //if otherthere is a error set as 0
+        int lookDirection = (obstacle.ObstacleType == Obstacle.Type.Bridge) ? -1 : (obstacle.ObstacleType == Obstacle.Type.Ladder) ? 0 : 0;
+
+        StartCoroutine(actions.BePassPart(member, passStartPos, memberPosInPass, SetBasePosition, lookDirection));
     }
 
-    public void ClimbLadder(MotherGang.Gang gang, Vector3 ladderPos, Vector3 ladderEndPosition, Action SetBasePosition = null)
+    public void PassObstacle(MotherGang.Gang gang, Obstacle obstacle, Action SetBasePosition = null)
     {
         MotherGang.GangMember member = gang.AllGang.Find(mem => mem.member == this);
 
         //At the end add this member to movables
         //Bu action action.ClimbLadder bitince cagiriliyor. Member i yeniden movable lara ekliyor
-        Action addToMovables = delegate () { AddMemberToMovables(gang,member);};
-
+        Action addToMovables = delegate () { AddMemberToMovables(gang, member); };
         //Eger member movable ise cikar ordan
         RemoveMemberFromMovables(gang);
 
-        StartCoroutine(actions.ClimbLadder(member, ladderPos, ladderEndPosition, addToMovables, SetBasePosition));
-    }
-    #endregion
+        StartCoroutine(actions.PassObstacle(member, obstacle.passStartMember, obstacle.passEndMember, addToMovables, SetBasePosition));
 
-
-    #region BridgePassing
-    //Bunlari ayirdim cunku bazen sadece kopru gecirmek gerekli durumlar olabilir
-    public void CreateBridge(MotherGang.Gang gang, Vector3 bridgePos, Vector3 positionInBridge, Action SetBasePosition = null)
-    {
-        MotherGang.GangMember member = gang.AllGang.Find(mem => mem.member == this);
-
-        RemoveMemberFromMovables(gang);
-
-        StartCoroutine(actions.CreateBridge(member, bridgePos, positionInBridge, SetBasePosition));
-    }
-
-    public void PassBridge(MotherGang.Gang gang, Vector3 bridgePos, Vector3 bridgeEndPosition, Action SetBasePosition = null)
-    {
-        MotherGang.GangMember member = gang.AllGang.Find(mem => mem.member == this);
-
-        //At the end add this member to movables
-        Action addToMovables = delegate () { AddMemberToMovables(gang,member); };
-
-        RemoveMemberFromMovables(gang);
-
-        StartCoroutine(actions.PassBridge(member, bridgePos, bridgeEndPosition, addToMovables, SetBasePosition));
-    }
-    #endregion
-
-    public void AddMemberToMovables(MotherGang.Gang gang)
-    {
-        //eger liste de degil ise ekle 
-        if (gang.MovableMembers.Exists(mem => mem.member == this) == false)
-        {
-            memberLock = false;
-
-            MotherGang.GangMember member = gang.AllGang.Find(mem => mem.member == this);
-            gang.MovableMembers.Add(member);
-
-            if (DataManager.instance.currentGangState == MotherGang.GangState.Walking)
-                member.animator.SetBool("isWalking", true);
-
-            if(gang.AllGang.Exists(mem => mem.member == this) == false)
-            {
-                gang.AllGang.Add(member);
-            }
-
-        }
     }
 
     public void AddMemberToMovables(MotherGang.Gang gang, MotherGang.GangMember member)
@@ -158,7 +114,7 @@ public class Member : MonoBehaviour
             memberLock = false;
             gang.MovableMembers.Add(member);
 
-            if (DataManager.instance.currentGangState == MotherGang.GangState.Walking)
+            if (DataManager.instance.currentGangState == DataManager.GangState.Walking)
                 member.animator.SetBool("isWalking", true);
 
             if (gang.AllGang.Exists(mem => mem.member == this) == false)

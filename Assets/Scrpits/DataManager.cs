@@ -12,7 +12,7 @@ public class DataManager
     public UIScript UI;
 
     //Dynamic LevelData
-    public MotherGang.GangState currentGangState;
+    public GangState currentGangState;
     public MotherGang motherGang;
 
     private GameState state;
@@ -20,12 +20,22 @@ public class DataManager
     {
         get { return state; }   // get method
     }
-    
+
     public enum GameState
     {
         Play,
         End
     }
+
+    public enum GangState
+    {
+        Idle = 0,
+        Walking,
+        Climbing,
+        Bridge,
+        LevelPassed,
+        GameOver
+    };
 
     public DataManager()
     {
@@ -63,7 +73,7 @@ public class DataManager
         Time.timeScale = 0;
         UI.LevelPassed();
 
-        currentGangState = MotherGang.GangState.LevelPassed;
+        currentGangState = GangState.LevelPassed;
 
         resetDataManager();
     }
@@ -75,7 +85,7 @@ public class DataManager
         Time.timeScale = 0;
         UI.GameOver();
 
-        currentGangState = MotherGang.GangState.GameOver;
+        currentGangState = GangState.GameOver;
 
         resetDataManager();
     }

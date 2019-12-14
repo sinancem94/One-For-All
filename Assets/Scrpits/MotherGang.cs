@@ -8,19 +8,8 @@ public class MotherGang : MonoBehaviour
     int memberCount;
     Transform memberToLoad;
 
-    public enum GangState
-    {
-        Idle = 0,
-        Walking,
-        Climbing,
-        Bridge,
-        LevelPassed,
-        GameOver
-    };
-
     public struct Gang
     {
-        public GangState currState;
         //gangin ustunde gitcegi base
         public Transform Base;
         public Transform baseHead;
@@ -30,9 +19,6 @@ public class MotherGang : MonoBehaviour
 
         //Movable member larin tumu. Eger bir member olduyse veya kopru, merdiven vs olduysa burdan cikar
         public List<GangMember> AllGang;
-
-        public Collision collision;
-        public Collider collider;
     }
 
     public struct GangMember
@@ -64,9 +50,7 @@ public class MotherGang : MonoBehaviour
         memberToLoad = Resources.Load<Transform>("Prefabs/GangMember");
 
         gang = new Gang();
-
-        gang.currState = GangState.Idle;
-        DataManager.instance.currentGangState = GangState.Idle;
+        DataManager.instance.currentGangState = DataManager.GangState.Idle;
 
         memberCount = DataManager.instance.levelData.memberCount;
         this.transform.position = DataManager.instance.levelData.motherGangPosition;
@@ -86,7 +70,7 @@ public class MotherGang : MonoBehaviour
 
     private void Update()
     {
-       if (inputX.IsInput() && (DataManager.instance.currentGangState == GangState.Walking || DataManager.instance.currentGangState == GangState.Idle))
+       if (inputX.IsInput() && (DataManager.instance.currentGangState == DataManager.GangState.Walking || DataManager.instance.currentGangState == DataManager.GangState.Idle))
        {
             GeneralInput gInput = inputX.GetInput(0);
 
@@ -135,8 +119,6 @@ public class MotherGang : MonoBehaviour
 
         gang.Base = gangBase;
         gang.baseHead = baseHead.transform;
-
-        gang.collider = gang.Base.GetChild(0).GetComponent<Collider>();
     }
 
 
@@ -145,21 +127,23 @@ public class MotherGang : MonoBehaviour
         //tag karsilastirmanin hizli youlu.Layer daha iyi olabilir
         if (other.CompareTag("LadderObstacle"))
         {
-            DataManager.instance.currentGangState = GangState.Climbing;
+            DataManager.instance.currentGangState = DataManager.GangState.Climbing;
 
             Obstacle ladder = other.GetComponent<Obstacle>();
 
-            StartCoroutine(gangMovementScript.CreateLadder(gang, ladder.ManCount, ladder,Vector2.up));
+            Debug.Log("Creating ladder");
+            StartCoroutine(gangMovementScript.CreateObstaclePass(gang, ladder.ManCount, ladder,Vector2.up));
 
            //StartCoroutine(gangMovementScript.CreateLadder(10, 3, gangMovementScript.gangTransforms.Find(x => x.transform == transform), other.transform));   //gangMovementScript.gangTransforms[6]));                                  
         }
         else if (other.CompareTag("BridgeObstacle"))
         {
-            DataManager.instance.currentGangState = GangState.Bridge;
+            DataManager.instance.currentGangState = DataManager.GangState.Bridge;
 
             Obstacle bridge = other.GetComponent<Obstacle>();
 
-            StartCoroutine(gangMovementScript.CreateBridge(gang, bridge.ManCount, bridge,Vector2.up));
+            Debug.Log("Creating bridge");
+            StartCoroutine(gangMovementScript.CreateObstaclePass(gang, bridge.ManCount, bridge,Vector2.up));
 
             //StartCoroutine(gangMovementScript.CreateBridge(8, 3, gangMovementScript.gangTransforms.Find(x => x.transform == transform), other.transform));
         }
@@ -169,7 +153,7 @@ public class MotherGang : MonoBehaviour
 
             if(createdLadder.isCloseToPassPoint(gang.baseHead.position))
             {
-                DataManager.instance.currentGangState = GangState.Climbing;
+                DataManager.instance.currentGangState = DataManager.GangState.Climbing;
 
                 Vector2 directionVec;
 
@@ -178,7 +162,8 @@ public class MotherGang : MonoBehaviour
                 else
                     directionVec = Vector2.down;
 
-                StartCoroutine(gangMovementScript.PassLadder(gang, createdLadder, directionVec));
+                Debug.Log("Passing ladder");
+                StartCoroutine(gangMovementScript.PassObject(gang, createdLadder, directionVec));
 
             }
         }
@@ -188,7 +173,7 @@ public class MotherGang : MonoBehaviour
 
             if (createdBridge.isCloseToPassPoint(gang.baseHead.position))
             {
-                DataManager.instance.currentGangState = GangState.Climbing;
+                DataManager.instance.currentGangState = DataManager.GangState.Climbing;
 
                 Vector2 directionVec;
 
@@ -197,7 +182,8 @@ public class MotherGang : MonoBehaviour
                 else
                     directionVec = Vector2.down;
 
-                StartCoroutine(gangMovementScript.PassBridge(gang, createdBridge, directionVec));
+                Debug.Log("Passing bridge");
+                StartCoroutine(gangMovementScript.PassObject(gang, createdBridge, directionVec));
 
             }
         }
@@ -208,23 +194,6 @@ public class MotherGang : MonoBehaviour
         }
     }
     
-    private void OnCollisionEnter(Collision collision)
-    {
-        if (collision.gameObject.layer == LayerMask.NameToLayer("HouseObstacle"))
-        {
-            //Debug.Log("anan");
-            gang.collision = collision;
-        }
-    }
-
-    private void OnCollisionExit(Collision collision)
-    {
-        if (collision.gameObject.layer == LayerMask.NameToLayer("HouseObstacle"))
-        {
-            gang.collision = null;
-        }
-    }
-
     public Gang GetGang()
     {
         return gang;

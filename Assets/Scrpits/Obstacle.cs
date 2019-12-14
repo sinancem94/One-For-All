@@ -26,10 +26,10 @@ public class Obstacle : MonoBehaviour
 
     [HideInInspector]
     //Ladder, bridge etc nin ilk basta kuruldugu pozisyon
-    public Transform passStartMember;
+    public Vector3 passStartMember;
     [HideInInspector]
     //Ladder, bridge etc nin en son memberin pozisyonu 
-    public Transform passEndMember;
+    public Vector3 passEndMember;
 
     private void Start()
     {
@@ -52,7 +52,7 @@ public class Obstacle : MonoBehaviour
         }
     }
 
-    public void CreateObstacleMembers(List<MotherGang.GangMember> usedMembers)
+    public void CreateObstacleMembers(List<MotherGang.GangMember> usedMembers, Vector3 passStartPosition, Vector3 passEndPosition)
     {
         //Obje pass edildikten sonra memberlarin olusturdugu path
         MemberPass = new GameObject("ObstaclePass");
@@ -82,17 +82,14 @@ public class Obstacle : MonoBehaviour
             usedMember.transform.parent = MemberPass.transform;
         }
 
-        passEndMember = usedMembers[usedMembers.Count - 1].transform;
-        passStartMember = usedMembers[0].transform;
-
-        //Debug.Log(passStartMember + "  " + passEndMember);
-
+        passStartMember = passStartPosition;
+        passEndMember = passEndPosition;
     }
 
     //eger gang pass in oldugu pozisyona yakinsa ve usedObstacle a carpiyorsa true don
     public bool isCloseToPassPoint(Vector3 gangPosition)
     {
-        if (Mathf.Abs(Vector3.Distance(gangPosition, passStartMember.position)) <= 5f || Mathf.Abs(Vector3.Distance(gangPosition, passStartMember.position)) <= 5f)
+        if (Mathf.Abs(Vector3.Distance(gangPosition, passStartMember)) <= 10f || Mathf.Abs(Vector3.Distance(gangPosition, passEndMember)) <= 10f)
             return true;
 
         return false;
