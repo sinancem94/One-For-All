@@ -15,10 +15,10 @@ public class DataManager
     public GangState currentGangState;
     public MotherGang motherGang;
 
-    private GameState state;
-    public GameState State
+    private GameState gState;
+    public GameState gameState
     {
-        get { return state; }   // get method
+        get { return gState; }   // get method
     }
 
     public enum GameState
@@ -61,9 +61,9 @@ public class DataManager
         motherGang = GameObject.FindObjectOfType(typeof(MotherGang)) as MotherGang;
     }
 
-    public void SetState(GameState newState)
+    void SetState(GameState newState)
     {
-        state = newState;
+        gState = newState;
     }
 
     public void LevelPassed()

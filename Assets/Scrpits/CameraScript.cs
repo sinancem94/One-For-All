@@ -8,6 +8,9 @@ public class CameraScript : MonoBehaviour
 
     void Update()
     {
-        transform.position = Vector3.MoveTowards(transform.position,objectFollowedByCam.transform.position,1f);    //bunu daha düzgün implement et
+        //Calculate the delta
+        float delta = Mathf.Abs(Vector3.Distance(transform.localPosition, objectFollowedByCam.transform.position)) * 0.03f;
+
+        transform.position = Vector3.MoveTowards(transform.position,objectFollowedByCam.transform.position,delta);    
     }
 }

@@ -13,7 +13,7 @@ public class MemberActions
 
     public IEnumerator PassObstacle(MotherGang.GangMember member, Vector3 passStartPos, Vector3 passEndPos, Action AddToMovables, Action setNewGangBasePostion = null)
     {
-        member.transform.GetComponent<Rigidbody>().useGravity = false;
+        member.member.memRb.useGravity = false;
         member.transform.GetComponent<Collider>().isTrigger = true;
 
         float randX = UnityEngine.Random.Range(-5f, 5f);
@@ -44,6 +44,9 @@ public class MemberActions
         }
         member.transform.position = passEndPos;
 
+        //tirmandiktan sonra base asagidaysa yukari tasi
+        if (setNewGangBasePostion != null)
+            setNewGangBasePostion();
         //send member to a random location after climbing to prevent them all stay at the same position
         //this position should be handled more precisely
         member.transform.LookAt(lastPos);
@@ -61,8 +64,7 @@ public class MemberActions
         member.transform.GetComponent<Rigidbody>().useGravity = true;
         member.transform.GetComponent<Collider>().isTrigger = false;
 
-        if (setNewGangBasePostion != null)
-            setNewGangBasePostion();
+        //bu member i movable a ekle
         if (AddToMovables != null)
             AddToMovables();
     }
@@ -79,7 +81,7 @@ public class MemberActions
     /// <returns></returns>
     public IEnumerator BePassPart(MotherGang.GangMember member, Vector3 passStartPos, Vector3 memberPosInPass ,Action setNewGangBasePostion, int lookDirection = 0)
     {
-        member.transform.GetComponent<Rigidbody>().useGravity = false;
+        member.member.memRb.useGravity = false;
         member.transform.GetComponent<Collider>().isTrigger = true;
 
         //send member to pass start position

@@ -5,10 +5,13 @@ using System;
 
 public class Member : MonoBehaviour
 {
-    //member larin harekerini saglamak icin mutex. eger tirmanma veya kopru gecme vs islemindeyse lock la yoksa acik dursun
-    public bool memberLock;
-
     MemberActions actions;
+
+    public Rigidbody memRb;
+    public Animator memAnim;
+
+    //member larin hareketini saglamak icin mutex. eger tirmanma veya kopru gecme vs islemindeyse lock la yoksa acik dursun
+    bool memberLock;
 
     //ilk basta MotherGang de setleniyor
     Vector3 positionInBase;
@@ -17,9 +20,16 @@ public class Member : MonoBehaviour
     //basePos her framede updateleniyor eger farkli ise positionInBase degistiriliyor
     Vector2 basePosition;
 
+    //for walking animation. if memberLock is UNLOCKED Member will start walk animation automaticaly if position changed. 
+    Vector3 currPosition;
+    bool isWalking = false;
+
     void Start()
     {
-        memberLock = false;
+        memRb = GetComponent<Rigidbody>();
+        memAnim = GetComponent<Animator>();
+
+        SetLock(false);
         actions = new MemberActions();
         basePosition = Vector2.one * 10f;
 
@@ -28,10 +38,15 @@ public class Member : MonoBehaviour
 
     private void Update()
     {
-        SetNewPosition(DataManager.instance.GetGang().Base);
-        if (!memberLock && (DataManager.instance.currentGangState == DataManager.GangState.Walking || DataManager.instance.currentGangState == DataManager.GangState.Idle))
+        positionInBase = SetNewPosition(DataManager.instance.GetGang().Base);
+    }
+
+    private void FixedUpdate()
+    {
+        if (!memberLock) //&& (DataManager.instance.currentGangState == DataManager.GangState.Walking || DataManager.instance.currentGangState == DataManager.GangState.Idle))
         {
             MoveTowards(positionInBase);
+            WalkAnimation();
         }
     }
 
@@ -78,9 +93,9 @@ public class Member : MonoBehaviour
         }
     }
 
-    public void CreateObstaclePass(MotherGang.Gang gang, Obstacle obstacle, Vector3 passStartPos, Vector3 memberPosInPass, Action SetBasePosition = null)
+    public void CreateObstaclePass(MotherGang.Gang gang, MotherGang.GangMember member, Obstacle obstacle, Vector3 passStartPos, Vector3 memberPosInPass, Action SetBasePosition = null)
     {
-        MotherGang.GangMember member = gang.AllGang.Find(mem => mem.member == this);
+        //MotherGang.GangMember member = gang.AllGang.Find(mem => mem.member == this);
         //Eger member movable ise cikar ordan
         RemoveMemberFromMovables(gang);
 
@@ -92,17 +107,15 @@ public class Member : MonoBehaviour
         StartCoroutine(actions.BePassPart(member, passStartPos, memberPosInPass, SetBasePosition, lookDirection));
     }
 
-    public void PassObstacle(MotherGang.Gang gang, Obstacle obstacle, Action SetBasePosition = null)
+    public void PassObstacle(MotherGang.Gang gang, MotherGang.GangMember member, Obstacle obstacle, Action SetBasePosition = null)
     {
-        MotherGang.GangMember member = gang.AllGang.Find(mem => mem.member == this);
-
         //At the end add this member to movables
         //Bu action action.ClimbLadder bitince cagiriliyor. Member i yeniden movable lara ekliyor
         Action addToMovables = delegate () { AddMemberToMovables(gang, member); };
         //Eger member movable ise cikar ordan
         RemoveMemberFromMovables(gang);
 
-        StartCoroutine(actions.PassObstacle(member, obstacle.passStartMember, obstacle.passEndMember, addToMovables, SetBasePosition));
+        StartCoroutine(actions.PassObstacle(member, obstacle.passStartPosition, obstacle.passEndPosition, addToMovables, SetBasePosition));
 
     }
 
@@ -111,11 +124,11 @@ public class Member : MonoBehaviour
         //eger liste de degil ise ekle 
         if (gang.MovableMembers.Exists(mem => mem.member == this) == false)
         {
-            memberLock = false;
+            member.member.SetLock(false);
             gang.MovableMembers.Add(member);
 
-            if (DataManager.instance.currentGangState == DataManager.GangState.Walking)
-                member.animator.SetBool("isWalking", true);
+           // if (DataManager.instance.currentGangState == DataManager.GangState.Walking)
+             //   member.animator.SetBool("isWalking", true);
 
             if (gang.AllGang.Exists(mem => mem.member == this) == false)
             {
@@ -131,9 +144,10 @@ public class Member : MonoBehaviour
         //eger bu liste de var ise cikar
         if (gang.MovableMembers.Exists(mem => mem.member == this))
         {
-            memberLock = true;
-
             MotherGang.GangMember member = gang.MovableMembers.Find(mem => mem.member == this);
+
+            member.member.SetLock(true);
+            
             gang.MovableMembers.Remove(member);
 
             if(didDied)
@@ -141,6 +155,22 @@ public class Member : MonoBehaviour
                 gang.AllGang.Remove(member);
             }
         }
+    }
+
+    void WalkAnimation()
+    {
+        if (isWalking && Vector3.Distance(currPosition, transform.position) <= 0.2f)
+        {
+            isWalking = false;
+            memAnim.SetBool("isWalking", false);
+        }                                                                                    //eger y degisiyorsa walking animasyonunu setleme. ya dusuyordur ya da merdiven cikiyordur 
+        else if (!isWalking && Vector3.Distance(currPosition, transform.position) > 0.2f) //&& Mathf.Abs(transform.position.y - currPosition.y) < 0.001f)
+        {
+            memAnim.SetBool("isWalking", true);
+            isWalking = true;
+        }
+
+        currPosition = transform.position;
     }
 
     private void OnCollisionEnter(Collision collision)
@@ -156,27 +186,42 @@ public class Member : MonoBehaviour
     {
         Vector2 currBasePos = new Vector2(gangBase.transform.position.x, gangBase.transform.position.z);
 
-        //eger degismediyse fazla setleme cik
+        //eger base in yeri fazla degismediyse member in pozisyonu nu setleme cik
         if (Vector2.Distance(currBasePos, basePosition) < 0.5f)
             return positionInBase;
 
         Vector2 memberPos = currBasePos + RandomPosInBase;
 
-        positionInBase = new Vector3(memberPos.x, gangBase.localPosition.y - (gangBase.localScale.y), memberPos.y);
+        positionInBase = new Vector3(memberPos.x, gangBase.position.y - (gangBase.localScale.y) - transform.localScale.y, memberPos.y);
         return positionInBase;
     }
 
     void MoveTowards(Vector3 posInBase)
     {
         //Calculate the delta
-        float delta = Mathf.Abs(Vector3.Distance(transform.localPosition, posInBase)) * 0.09f;
+        float delta = Mathf.Abs(Vector3.Distance(transform.localPosition, posInBase)) * 0.1f;
+        Vector3 newPosition = Vector3.MoveTowards(transform.position, posInBase, delta);// posVec - gang.Base.transform.position;
 
-        transform.localPosition = Vector3.MoveTowards(transform.localPosition, posInBase, delta);
+        memRb.MovePosition(newPosition);
 
         Vector3 lookPos = posInBase;
         lookPos.y = transform.position.y;
 
         transform.LookAt(lookPos);
+    }
+
+    public bool SetLock(bool isLocked)
+    {
+        if( (memberLock && !isLocked) || (!memberLock && isLocked) )
+            memberLock = isLocked;
+
+        if (isWalking)
+        {
+            memAnim.SetBool("isWalking", false);
+            isWalking = false;
+        }
+
+        return memberLock;
     }
 
     //baslangicta bi pozisyon setlemek icin
@@ -185,5 +230,6 @@ public class Member : MonoBehaviour
         RandomPosInBase = (gangBase.localScale.x / 2f * UnityEngine.Random.insideUnitCircle);
         return RandomPosInBase;
     }
+
 
 }

@@ -17,23 +17,28 @@ public class Obstacle : MonoBehaviour
     [Header("Assign how many mans are needed to pass this obstacle")]
     public int ManCount;
 
-    [HideInInspector]
-    //Bridge veya Ladder bu olcak
-    public GameObject MemberPass;
-
-    [HideInInspector]
-    public List<Transform> ObstacleMembers;
+    BoxCollider collider;
+    //oyun icinde bridge veya Ladder bu olcak
+    GameObject MemberPass;
 
     [HideInInspector]
     //Ladder, bridge etc nin ilk basta kuruldugu pozisyon
-    public Vector3 passStartMember;
+    public Vector3 passStartPosition;
     [HideInInspector]
     //Ladder, bridge etc nin en son memberin pozisyonu 
-    public Vector3 passEndMember;
+    public Vector3 passEndPosition;
 
     private void Start()
     {
-        if(ManCount == 0)
+        collider = gameObject.GetComponent<BoxCollider>();
+
+        if (collider.size.y <= 1)
+        {
+            Debug.LogWarning("Obstacle collider height is 1. It should be bigger for gang collision setting to 2.");
+            collider.size = new Vector3(collider.size.x, 2, collider.size.z);
+        }
+
+        if (ManCount == 0)
         {
             Debug.LogError("Man count of obstacle " + this.name + " is not setted.");
         }
@@ -52,7 +57,7 @@ public class Obstacle : MonoBehaviour
         }
     }
 
-    public void CreateObstacleMembers(List<MotherGang.GangMember> usedMembers, Vector3 passStartPosition, Vector3 passEndPosition)
+    public void CreateObstacleMembers(List<MotherGang.GangMember> usedMembers, Vector3 passStartPos, Vector3 passEndPos)
     {
         //Obje pass edildikten sonra memberlarin olusturdugu path
         MemberPass = new GameObject("ObstaclePass");
@@ -62,6 +67,7 @@ public class Obstacle : MonoBehaviour
         if(ObstacleType == Type.Ladder)
         {
             objTag = "MemberLadder";
+            MemberPass.layer = LayerMask.NameToLayer("MemberLadder");
         }
         else if(ObstacleType == Type.Bridge)
         {
@@ -80,16 +86,19 @@ public class Obstacle : MonoBehaviour
         foreach (MotherGang.GangMember usedMember in usedMembers)
         {
             usedMember.transform.parent = MemberPass.transform;
+            usedMember.transform.tag = objTag;
+            usedMember.transform.gameObject.layer = LayerMask.NameToLayer(objTag);
         }
 
-        passStartMember = passStartPosition;
-        passEndMember = passEndPosition;
+        this.passStartPosition = passStartPos;
+        this.passEndPosition = passEndPos;
+
     }
 
     //eger gang pass in oldugu pozisyona yakinsa ve usedObstacle a carpiyorsa true don
     public bool isCloseToPassPoint(Vector3 gangPosition)
     {
-        if (Mathf.Abs(Vector3.Distance(gangPosition, passStartMember)) <= 10f || Mathf.Abs(Vector3.Distance(gangPosition, passEndMember)) <= 10f)
+        if (Mathf.Abs(Vector3.Distance(gangPosition, passStartPosition)) <= 5f || Mathf.Abs(Vector3.Distance(gangPosition, passEndPosition)) <= 5f)
             return true;
 
         return false;
