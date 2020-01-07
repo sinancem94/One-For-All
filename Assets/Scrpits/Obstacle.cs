@@ -111,7 +111,7 @@ public class Obstacle : MonoBehaviour
         //calculate starting position and ending position if obstacle is a bridge look at z positions
         if (ObstacleType == Obstacle.Type.Bridge)
         {
-            if (DataManager.instance.GetGang().Base.position.z < passStartPosition.z)
+            if (DataManager.instance.GetGang().Base.position.z < this.transform.position.z)
                 direction = 1;
             else
                 direction = -1;
@@ -133,7 +133,7 @@ public class Obstacle : MonoBehaviour
         else if (ObstacleType == Obstacle.Type.Ladder)
         {
 
-            if (DataManager.instance.GetGang().Base.position.y < passStartPosition.y)
+            if (DataManager.instance.GetGang().Base.position.y < this.transform.position.y)
                 direction = 1;
             else
                 direction = -1;

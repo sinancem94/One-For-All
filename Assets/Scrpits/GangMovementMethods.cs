@@ -168,10 +168,8 @@ public class GangMovementMethods
             }
         }
 
-        Vector3 passEndPosition = memberPosInPass;
-
         tmpMovables.RemoveRange(0, createdPassLength);
-        obstacle.SetAsPassableObstacle(obstacleMembers,passStartPosition,passEndPosition);
+        obstacle.SetAsPassableObstacle(obstacleMembers,passStartPosition, memberPosInPass);
 
         for (int i = 0; i < tmpMovables.Count; i++)
         {

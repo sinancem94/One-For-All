@@ -42,7 +42,7 @@ public class MemberActions
         gangMem.member.memRb.useGravity = false;
         gangMem.transform.GetComponent<Collider>().isTrigger = true;
 
-         float lastZPositionModifier = 4f;
+        float lastZPositionModifier = 4f;
 
         //if direction is reserved members will go to wrong position due to randZ is always positive. Make it negative if direction is reversed
         if (passStartPos.z > passEndPos.z || passStartPos.y > passEndPos.y)
