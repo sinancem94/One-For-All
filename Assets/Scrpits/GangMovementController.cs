@@ -18,7 +18,7 @@ public class GangMovementController : MonoBehaviour
 
     private void Update()
     {
-        if (inputX.GetInputs() && (DataManager.instance.currentGangState == DataManager.GangState.Walking || DataManager.instance.currentGangState == DataManager.GangState.Idle))
+        if (inputX.GetInputs() && (DataManager.instance.currentGangState != DataManager.GangState.EventLocked))
         {
             inputDelta = SetInputStateAndDelta();
         }
@@ -38,76 +38,31 @@ public class GangMovementController : MonoBehaviour
         if(moveMethods.gangEvent == null)
         {
             //tag karsilastirmanin hizli youlu.Layer daha iyi olabilir
-            if (other.CompareTag("LadderObstacle"))
+            if (other.CompareTag("Obstacle"))
             {
-                DataManager.instance.currentGangState = DataManager.GangState.Climbing;
+                DataManager.instance.currentGangState = DataManager.GangState.EventLocked;
 
-                Obstacle ladder = other.GetComponent<Obstacle>();
+                Obstacle obstacle = other.GetComponent<Obstacle>();
 
-                moveMethods.CreateObstaclePass(this, ladder.ManCount, ladder, Vector2.up);
+                moveMethods.CreateObstaclePass(this, obstacle.ManCount, obstacle);
 
-                Debug.Log("Creating ladder");
-                //StartCoroutine(moveMethods.CreateObstaclePassCorountine(DataManager.instance.GetGang(), ladder.ManCount, ladder, Vector2.up));
-
-                //StartCoroutine(gangMovementScript.CreateLadder(10, 3, gangMovementScript.gangTransforms.Find(x => x.transform == transform), other.transform));   //gangMovementScript.gangTransforms[6]));                                  
+                Debug.Log("Creating ladder or bridge");                                
             }
-            else if (other.CompareTag("BridgeObstacle"))
+            else if (other.CompareTag("PassableObstacle"))
             {
-                DataManager.instance.currentGangState = DataManager.GangState.Bridge;
+                Obstacle createdPass = other.GetComponentInParent<Obstacle>();
 
-                Obstacle bridge = other.GetComponent<Obstacle>();
-
-                Debug.Log("Creating bridge");
-                moveMethods.CreateObstaclePass(this, bridge.ManCount, bridge, Vector2.up);
-
-                // StartCoroutine(moveMethods.CreateObstaclePassCorountine(DataManager.instance.GetGang(), bridge.ManCount, bridge, Vector2.up));
-
-                //StartCoroutine(gangMovementScript.CreateBridge(8, 3, gangMovementScript.gangTransforms.Find(x => x.transform == transform), other.transform));
-            }
-            else if (other.CompareTag("MemberLadder"))
-            {
-                Obstacle createdLadder = other.GetComponentInParent<Obstacle>();
-
-                if (createdLadder.isCloseToPassPoint(DataManager.instance.GetGang().baseHead.position))
+                if (createdPass.isCloseToPassPoint(DataManager.instance.GetGang().baseHead.position))
                 {
-                    DataManager.instance.currentGangState = DataManager.GangState.Climbing;
-
-                    Vector2 directionVec;
-
-                    if (DataManager.instance.GetGang().Base.position.y < createdLadder.passStartPosition.y)
-                        directionVec = Vector2.up;
-                    else
-                        directionVec = Vector2.down;
-
-                    moveMethods.PassObstacle(this, createdLadder, directionVec);
-                    Debug.Log("Passing ladder");
-                    // StartCoroutine(moveMethods.PassObjectCorountine(DataManager.instance.GetGang(), createdLadder, directionVec));
-
+                    DataManager.instance.currentGangState = DataManager.GangState.EventLocked;
+                   
+                    moveMethods.PassObstacle(this, createdPass);
+                    Debug.Log("Passing ladder or bridge");
                 }
             }
-            else if (other.CompareTag("MemberBridge"))
-            {
-                Obstacle createdBridge = other.GetComponentInParent<Obstacle>();
-
-                if (createdBridge.isCloseToPassPoint(DataManager.instance.GetGang().baseHead.position))
-                {
-                    DataManager.instance.currentGangState = DataManager.GangState.Bridge;
-
-                    Vector2 directionVec;
-
-                    if (DataManager.instance.GetGang().Base.position.z < createdBridge.passStartPosition.z)
-                        directionVec = Vector2.up;
-                    else
-                        directionVec = Vector2.down;
-
-                    moveMethods.PassObstacle(this, createdBridge, directionVec);
-
-                    Debug.Log("Passing bridge");
-                }
-            }
+          
         }
-
-       
+ 
         if (other.CompareTag("FinishLine"))
         {
             DataManager.instance.LevelPassed();
@@ -115,7 +70,24 @@ public class GangMovementController : MonoBehaviour
         }
     }
 
-    Vector2 inputStartPos;
+    private void OnCollisionEnter(Collision collision)
+    {
+        if(collision.gameObject.CompareTag("PushableObject"))
+        {
+            collision.gameObject.GetComponent<Pushable>().CollidedWithPusher(this.gameObject);
+        }
+    }
+
+    private void OnCollisionExit(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("PushableObject"))
+        {
+            collision.gameObject.GetComponent<Pushable>().ExitedCollisionWithPusher();
+        }
+    }
+
+
+        Vector2 inputStartPos;
     Vector2 inputDelta = Vector2.zero;
     public Vector2 SetInputStateAndDelta()
     {
@@ -126,7 +98,6 @@ public class GangMovementController : MonoBehaviour
             inputStartPos = gInput.currentPosition;
 
             inputDelta = Vector2.zero;
-
 
             DataManager.instance.currentGangState = DataManager.GangState.Walking;
 

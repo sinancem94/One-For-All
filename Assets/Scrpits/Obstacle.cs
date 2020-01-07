@@ -17,9 +17,9 @@ public class Obstacle : MonoBehaviour
     [Header("Assign how many mans are needed to pass this obstacle")]
     public int ManCount;
 
-    BoxCollider collider;
+    BoxCollider coll;
     //oyun icinde bridge veya Ladder bu olcak
-    GameObject MemberPass;
+    GameObject ObstaclePass;
 
     [HideInInspector]
     //Ladder, bridge etc nin ilk basta kuruldugu pozisyon
@@ -30,62 +30,47 @@ public class Obstacle : MonoBehaviour
 
     private void Start()
     {
-        collider = gameObject.GetComponent<BoxCollider>();
+        coll = gameObject.GetComponent<BoxCollider>();
 
-        if (collider.size.y <= 1)
+        if (coll.size.y <= 1)
         {
             Debug.LogWarning("Obstacle collider height is 1. It should be bigger for gang collision setting to 2.");
-            collider.size = new Vector3(collider.size.x, 2, collider.size.z);
+            coll.size = new Vector3(coll.size.x, 2, coll.size.z);
         }
 
         if (ManCount == 0)
         {
-            Debug.LogError("Man count of obstacle " + this.name + " is not setted.");
+            Debug.LogError("Man count of obstacle " + this.gameObject.name + " is not setted.");
         }
 
         if(ObstacleType == Type.Null)
         {
             Debug.LogError("Object type could not be null please assign a type in editor");
         }
-        else if(ObstacleType == Type.Ladder)
+        else 
         {
-            this.tag = "LadderObstacle";
-        }
-        else if(ObstacleType == Type.Bridge)
-        {
-            this.tag = "BridgeObstacle";
+            this.tag = "Obstacle";
         }
     }
 
-    public void CreateObstacleMembers(List<MotherGang.GangMember> usedMembers, Vector3 passStartPos, Vector3 passEndPos)
+    public void SetAsPassableObstacle(List<MotherGang.GangMember> usedMembers, Vector3 passStartPos, Vector3 passEndPos)
     {
         //Obje pass edildikten sonra memberlarin olusturdugu path
-        MemberPass = new GameObject("ObstaclePass");
+        ObstaclePass = new GameObject("ObstaclePass");
 
-        string objTag = "";
+        string objTag = "PassableObstacle";
 
-        if(ObstacleType == Type.Ladder)
-        {
-            objTag = "MemberLadder";
-            MemberPass.layer = LayerMask.NameToLayer("MemberLadder");
-        }
-        else if(ObstacleType == Type.Bridge)
-        {
-            objTag = "MemberBridge";
-            MemberPass.layer = LayerMask.NameToLayer("MemberBridge");
-        }
+        ObstaclePass.transform.parent = this.transform;
 
-        MemberPass.transform.parent = this.transform;
-
-        MemberPass.tag = objTag;
-        MemberPass.layer = LayerMask.NameToLayer(objTag);
+        ObstaclePass.tag = objTag;
+        ObstaclePass.layer = LayerMask.NameToLayer(objTag);
 
         this.tag = objTag;
         this.gameObject.layer = LayerMask.NameToLayer(objTag);
 
         foreach (MotherGang.GangMember usedMember in usedMembers)
         {
-            usedMember.transform.parent = MemberPass.transform;
+            usedMember.transform.parent = ObstaclePass.transform;
             usedMember.transform.tag = objTag;
             usedMember.transform.gameObject.layer = LayerMask.NameToLayer(objTag);
         }
@@ -102,5 +87,71 @@ public class Obstacle : MonoBehaviour
             return true;
 
         return false;
+    }
+
+    public void CloseColliders()
+    {
+        foreach (Collider col in GetComponentsInChildren<Collider>())
+        {
+            col.enabled = false;
+        }
+    }
+    public void OpenColliders()
+    {
+        foreach (Collider col in GetComponentsInChildren<Collider>())
+        {
+            col.enabled = true;
+        }
+    }
+
+    //her bir kopruden/merdivenden geciste degisiyor
+    public int SetPassStartAndEndPositions()
+    {
+        int direction = 0;
+        //calculate starting position and ending position if obstacle is a bridge look at z positions
+        if (ObstacleType == Obstacle.Type.Bridge)
+        {
+            if (DataManager.instance.GetGang().Base.position.z < passStartPosition.z)
+                direction = 1;
+            else
+                direction = -1;
+
+            if (passStartPosition.z > passEndPosition.z && direction == 1)
+            {
+                Vector3 tmpPos = passStartPosition;
+                passStartPosition = passEndPosition;
+                passEndPosition = tmpPos;
+            }
+            else if (passStartPosition.z < passEndPosition.z && direction != 1)
+            {
+                Vector3 tmpPos = passStartPosition;
+                passStartPosition = passEndPosition;
+                passEndPosition = tmpPos;
+            }
+        }
+        //calculate starting position and ending position if obstacle is a ladder look at y positions
+        else if (ObstacleType == Obstacle.Type.Ladder)
+        {
+
+            if (DataManager.instance.GetGang().Base.position.y < passStartPosition.y)
+                direction = 1;
+            else
+                direction = -1;
+
+            if (passStartPosition.y > passEndPosition.y && direction == 1)
+            {
+                Vector3 tmpPos = passStartPosition;
+                passStartPosition = passEndPosition;
+                passEndPosition = tmpPos;
+            }
+            else if (passStartPosition.y < passEndPosition.y && direction != 1)
+            {
+                Vector3 tmpPos = passStartPosition;
+                passStartPosition = passEndPosition;
+                passEndPosition = tmpPos;
+            }
+        }
+
+        return direction;
     }
 }

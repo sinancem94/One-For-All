@@ -7,6 +7,13 @@ public class GangMovementMethods
 {
     public Coroutine gangEvent;
 
+   /* Func<Vector3> moveBase = new Action<Vector3>( (Vector3 newBasePosition) =>
+    {
+        SetGangBasePosition(DataManager.instance.GetGang().Base, newBasePosition);
+        //base i ileri tasidiktan sonra movable objeleri dolandirmaya basla
+        DataManager.instance.currentGangState = DataManager.GangState.Idle;
+    });*/
+
     public void LockAllMembers(MotherGang.Gang gang)
     {
         foreach (MotherGang.GangMember gangMember in gang.MovableMembers)
@@ -41,30 +48,36 @@ public class GangMovementMethods
     }
 
 
-    public void PassObstacle(MonoBehaviour owner, Obstacle obstacle, Vector2 directionVec)
+    public void PassObstacle(MonoBehaviour owner, Obstacle obstacle)
     {
         if (gangEvent == null)
         {
             Action StopMe = delegate () {
-                owner.StopCoroutine(gangEvent);
-                gangEvent = null;
+                if(gangEvent != null)
+                {
+                    owner.StopCoroutine(gangEvent);
+                    gangEvent = null;
+                } 
             };
 
-            gangEvent = owner.StartCoroutine(PassObjectCorountine(DataManager.instance.GetGang(), obstacle, directionVec, StopMe));
+            gangEvent = owner.StartCoroutine(PassObjectCorountine(DataManager.instance.GetGang(), obstacle, StopMe));
         }
     }
 
-    public void CreateObstaclePass(MonoBehaviour owner, int passLength, Obstacle obstacle, Vector2 directionVec)
+    public void CreateObstaclePass(MonoBehaviour owner, int passLength, Obstacle obstacle)
     {
         if(gangEvent == null)
         {
             Action StopMe = delegate () {
-                owner.StopCoroutine(gangEvent);
-                gangEvent = null;
+                if (gangEvent != null)
+                {
+                    owner.StopCoroutine(gangEvent);
+                    gangEvent = null;
+                }
             };
 
 
-            gangEvent = owner.StartCoroutine(CreateObstaclePassCorountine(DataManager.instance.GetGang(), passLength, obstacle, directionVec,StopMe));
+            gangEvent = owner.StartCoroutine(CreateObstaclePassCorountine(DataManager.instance.GetGang(), passLength, obstacle,StopMe));
         }
     }
 
@@ -82,7 +95,7 @@ public class GangMovementMethods
     /// for ladder Changes yDistBtwMembers if up yDistBtwMembers > 0 , if down yDistBtwMembers < 0
     /// for bridge changes zD
     /// <returns></returns>
-    IEnumerator CreateObstaclePassCorountine(MotherGang.Gang gang, int passLength, Obstacle obstacle, Vector2 directionVec,Action stopMe)
+    IEnumerator CreateObstaclePassCorountine(MotherGang.Gang gang, int passLength, Obstacle obstacle,Action stopMe)
     {
         LockAllMembers(gang);
 
@@ -94,7 +107,7 @@ public class GangMovementMethods
         Vector3 passStartPosition = memberPosInPass;
 
         //Directiona gore -1 ya da 1
-        int direction = (directionVec.y == 1) ? 1 : -1;
+        int direction = 1;// (directionVec.y == 1) ? 1 : -1;
 
         //memberlar arasi y mesafesi. direction a gore yukari ya da asagi dogru hareket et
         float distBtwUsedPassMembers = gang.MovableMembers[0].transform.lossyScale.y * 3 * direction;
@@ -107,19 +120,18 @@ public class GangMovementMethods
         //Gecisten sonra gangBase i nereye gitcek ona karar ver
         Vector3 newBasePosition = gang.Base.transform.position;
         float yPos = newBasePosition.y;
-        float zPos = obstacle.transform.position.z + (obstacle.transform.localScale.z / 2f * direction) + (gang.Base.transform.localScale.z / 2f * direction);
+        float zPos = obstacle.transform.position.z + (obstacle.transform.lossyScale.z / 2f * direction) + (gang.Base.transform.localScale.z / 2f * direction) + 1f;
         //eger gecis turu merdiven ise gang in y pozisyonunu da degistir
         if (obstacle.ObstacleType == Obstacle.Type.Ladder)
         {
-            yPos = obstacle.transform.position.y + (obstacle.transform.localScale.y * direction) + (gang.Base.transform.localScale.y);
+            yPos = obstacle.transform.position.y + (obstacle.transform.lossyScale.y / 2f * direction) + (gang.Base.transform.localScale.y);
         }
-        newBasePosition = new Vector3(gang.Base.transform.position.x, yPos, zPos);
+        newBasePosition = new Vector3(newBasePosition.x, yPos, zPos);
 
         //Bu action son member kopru oldugunda caigiriliyor (member.CreateBridge da null olarak gtmeyince sonunda cagiriliyor). Base i ileri (newBasePosition a) tasiyor
         Action moveBase = delegate () {
-            SetGangBasePosition(gang.Base, newBasePosition);
+            SetGangStateIdleAndPosition(newBasePosition);
             //base i ileri tasidiktan sonra movable objeleri dolandirmaya basla
-            DataManager.instance.currentGangState = DataManager.GangState.Idle;
         };
 
         List<MotherGang.GangMember> obstacleMembers = new List<MotherGang.GangMember>(passLength);
@@ -136,7 +148,7 @@ public class GangMovementMethods
                 //sonuncu iteration sa bu corountine bitince base i yukari tasi
                 if (i == passLength - 1)
                 {
-                    tmpMovables[i].member.CreateObstaclePass(gang, tmpMovables[i], obstacle, passStartPosition, memberPosInPass, moveBase);
+                    tmpMovables[i].member.CreateObstaclePass(gang, tmpMovables[i], obstacle, passStartPosition, memberPosInPass,moveBase);
                 }
                 else
                 {
@@ -159,7 +171,7 @@ public class GangMovementMethods
         Vector3 passEndPosition = memberPosInPass;
 
         tmpMovables.RemoveRange(0, createdPassLength);
-        obstacle.CreateObstacleMembers(obstacleMembers,passStartPosition,passEndPosition);
+        obstacle.SetAsPassableObstacle(obstacleMembers,passStartPosition,passEndPosition);
 
         for (int i = 0; i < tmpMovables.Count; i++)
         {
@@ -167,7 +179,7 @@ public class GangMovementMethods
             yield return new WaitForSecondsRealtime(UnityEngine.Random.Range(0.05f, 0.2f));
         }
 
-        gang.AllGang.RemoveRange(0, createdPassLength);
+        //gang.AllGang.RemoveRange(0, createdPassLength);
 
         stopMe();
     }
@@ -179,49 +191,16 @@ public class GangMovementMethods
     /// <param name="obstacle"></param>
     /// <param name="directionVec"></param>
     /// <returns></returns>
-    IEnumerator PassObjectCorountine(MotherGang.Gang gang, Obstacle obstacle, Vector2 directionVec,Action stopMe)
+    IEnumerator PassObjectCorountine(MotherGang.Gang gang, Obstacle obstacle,Action stopMe)
     {
         LockAllMembers(gang);
 
         //Directiona gore -1 ya da 1
-        int direction = (directionVec.y == 1) ? 1 : -1;
-
-        //calculate starting position and ending position if obstacle is a bridge look at z positions
-        if (obstacle.ObstacleType == Obstacle.Type.Bridge)
-        {
-            if(obstacle.passStartPosition.z > obstacle.passEndPosition.z && direction == 1)
-            {
-                Vector3 tmpPos = obstacle.passStartPosition;
-                obstacle.passStartPosition = obstacle.passEndPosition;
-                obstacle.passEndPosition = tmpPos;
-            }
-            else if(obstacle.passStartPosition.z < obstacle.passEndPosition.z && direction != 1)
-            {
-                Vector3 tmpPos = obstacle.passStartPosition;
-                obstacle.passStartPosition = obstacle.passEndPosition;
-                obstacle.passEndPosition = tmpPos;
-            }
-        }
-        //calculate starting position and ending position if obstacle is a ladder look at y positions
-        else if (obstacle.ObstacleType == Obstacle.Type.Ladder)
-        {
-            if (obstacle.passStartPosition.y > obstacle.passEndPosition.y && direction == 1)
-            {
-                Vector3 tmpPos = obstacle.passStartPosition;
-                obstacle.passStartPosition = obstacle.passEndPosition;
-                obstacle.passEndPosition = tmpPos;
-            }
-            else if (obstacle.passStartPosition.y < obstacle.passEndPosition.y && direction != 1)
-            {
-                Vector3 tmpPos = obstacle.passStartPosition;
-                obstacle.passStartPosition = obstacle.passEndPosition;
-                obstacle.passEndPosition = tmpPos;
-            }
-        }
+        int direction = obstacle.SetPassStartAndEndPositions();//(directionVec.y == 1) ? 1 : -1;
 
         Vector3 newBasePosition = obstacle.passEndPosition;
         newBasePosition.y = newBasePosition.y + (obstacle.transform.localScale.y / 2f);
-        newBasePosition.z = obstacle.transform.position.z + (obstacle.transform.localScale.z / 2f * direction) + (gang.Base.transform.localScale.z / 2f * direction);
+        newBasePosition.z = obstacle.transform.position.z + (obstacle.transform.localScale.z / 2f * direction) + (gang.Base.transform.localScale.z / 2f * direction) + 1f;
 
         //copy movable members to temp and delete movables. 
         List<MotherGang.GangMember> tmpMovables = new List<MotherGang.GangMember>(gang.MovableMembers.Count);
@@ -230,9 +209,7 @@ public class GangMovementMethods
 
         //Bu action son member merdiven oldugunda caigiriliyor (member.CreateLadder da null olarak gtmeyince sonunda cagiriliyor). Base i yukari tasiyor
         Action moveBase = delegate () {
-            SetGangBasePosition(gang.Base, newBasePosition);
-            //base i ileri tasidiktan sonra movable objeleri dolandirmaya basla
-            DataManager.instance.currentGangState = DataManager.GangState.Idle;
+            SetGangStateIdleAndPosition(newBasePosition);
         };
 
         //for sending gang to the top of the object
@@ -252,9 +229,11 @@ public class GangMovementMethods
         stopMe();
     }
 
-    void SetGangBasePosition(Transform gangBase, Vector3 pos)
+    static void SetGangStateIdleAndPosition(Vector3 pos)
     {
-        gangBase.transform.position = pos;
+        DataManager.instance.GetGang().Base.position = pos;
+        //base i ileri tasidiktan sonra movable objeleri dolandirmaya basla
+        DataManager.instance.currentGangState = DataManager.GangState.Idle;
     }
 }
 

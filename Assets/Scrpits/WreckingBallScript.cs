@@ -5,8 +5,7 @@ using UnityEngine;
 public class WreckingBallScript : MonoBehaviour
 {
 
-    //float speed;
-    Vector3 orgRotation;
+    public float Startingtime;
 
     Vector3 to;
     Vector3 from;
@@ -15,8 +14,6 @@ public class WreckingBallScript : MonoBehaviour
 
     void Start()
     {
-        orgRotation = transform.rotation.eulerAngles;
-
         to = new Vector3(-20f, 90f, 0f);
         from = new Vector3(-160f, 90f, 0f);
 
@@ -25,16 +22,9 @@ public class WreckingBallScript : MonoBehaviour
 
     void Update()
     {
-        //float diff = Mathf.Abs(Mathf.DeltaAngle(transform.rotation.eulerAngles.x, orgRotation.x));
-        //speed = normalizeDistance(diff);
+        float t = pulse(Time.time + Startingtime ,radiance);
 
-        float t = pulse(Time.time,radiance);
-        //float t = Mathf.Abs( Mathf.Sin( ( Time.time * Mathf.PI) / 180  ) ) * speed;
-
-        //float t = Mathf.PingPong(timer * speed, 1.0f);
         transform.eulerAngles = Vector3.Lerp(to, from, t);
-
-        //transform.rotation = Quaternion.Lerp(rotation1, rotation2, (Mathf.Sin(speed * Time.time) + 1.0f) / 2.0f);
     }
 
     //pulse between 0 and 1. for smooth movement of wrecking ball
@@ -42,19 +32,6 @@ public class WreckingBallScript : MonoBehaviour
     {
         const float frequency = 0.25f; // Frequency in Hz
         return rad * (1 + Mathf.Sin(2 * Mathf.PI * frequency * time));
-    }
-
-    
-    //normalize distance of vectors between zero and 1
-    float normalizeDistance(float distance)
-    {
-        float Max = Mathf.Abs(Mathf.DeltaAngle(orgRotation.x, from.x));
-
-        float Min = 0f;
-
-        float normDist = (Max - distance) / (Max - Min);
-
-        return normDist; //((normalizedMax - normalizedMin) / (Max - Min) * (distance - Max)) + normalizedMax;
     }
 
 }

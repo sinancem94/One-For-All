@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 3884088977955834575}
   - component: {fileID: 151436420221750859}
   - component: {fileID: 4964800181767144183}
-  m_Layer: 0
+  m_Layer: 19
   m_Name: GroundHeighted
   m_TagString: Ground
   m_Icon: {fileID: 0}
@@ -27,7 +27,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1847634793538551430}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 15.1, z: 145}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 130, y: 10, z: 50}
   m_Children: []
   m_Father: {fileID: 0}

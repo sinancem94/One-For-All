@@ -13,9 +13,9 @@ GameObject:
   - component: {fileID: 3597313315670298432}
   - component: {fileID: 2792859093685954708}
   - component: {fileID: 9123613340878571536}
-  m_Layer: 15
+  m_Layer: 12
   m_Name: LadderObstacle
-  m_TagString: LadderObstacle
+  m_TagString: Obstacle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

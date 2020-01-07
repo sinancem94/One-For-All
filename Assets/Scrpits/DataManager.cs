@@ -31,8 +31,7 @@ public class DataManager
     {
         Idle = 0,
         Walking,
-        Climbing,
-        Bridge,
+        EventLocked,
         LevelPassed,
         GameOver
     };
@@ -51,7 +50,16 @@ public class DataManager
         }
 
         LvlData getLevelData;
-        getLevelData = new LvlData(1);
+        //PlayerPrefs.DeleteAll();
+        int level = 1;
+        if (PlayerPrefs.HasKey("Level"))
+            level = PlayerPrefs.GetInt("Level");
+        else
+        {
+            PlayerPrefs.SetInt("Level", level);
+        }
+
+        getLevelData = new LvlData(level);
 
         levelData = getLevelData.GetLevelData();
 
@@ -103,6 +111,7 @@ public class DataManager
     //Current level data
     public struct LevelData
     {
+       public Transform memberToLoad; 
        public Vector3 motherGangPosition; 
        public int memberCount;
     }
