@@ -1,77 +1,145 @@
-﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UtmostInput;
 
 public class MotherGang : MonoBehaviour
 {
-    Transform memberToLoad;
-    List<Transform> GangMemberTransforms;
-    public List<Member> Members;
-    List<Animator> gangMemberAnimators;
-
     int memberCount;
-    
-    InputX inputX;
+    Transform memberToLoad;
 
-    private GangMovementScript gangMovementScript;
+    public struct Gang
+    {
+        public Rigidbody Rb;
+        //gangin ustunde gitcegi base
+        public Transform Base;
+        public Transform baseHead;
 
-    float Radius; //adamlarin olusabilecegi, ilerleyebilcegi daire buyuklugu
+        public float speed;
 
+        //alcalabilen platformlarda kullaniliyor. kac tane member olcaksa degeri o kadar bunun da.
+        public int GangWheight;
+
+        //Dynamic List . When climbing, building ladder etc. this list will be cleared and remaning movableMembers will be added one by one
+        public List<GangMember> MovableMembers;
+
+        //Movable member larin tumu. Eger bir member olduyse veya kopru, merdiven vs olduysa burdan cikar
+        public List<GangMember> AllGang;
+    }
+
+    public struct GangMember
+    {
+        public GangMember(Transform memT, Member memM)
+        {
+            transform = memT;
+            member = memM;
+        }
+
+        public Transform transform;
+        public Member member;
+    }
+
+    Gang gang;
+   
     void Start()
     {
-       
-        gangMemberAnimators = new List<Animator>();
-
-        //Create necessary objects
-        inputX = new InputX();
-
         //CrateMembers
-        memberToLoad = Resources.Load<Transform>("Prefabs/GangMember");
+        memberToLoad = DataManager.instance.levelData.memberToLoad;
 
-        if(DataManager.instance != null)
-        {
-            memberCount = DataManager.instance.levelData.memberCount;
-            this.transform.position = DataManager.instance.levelData.motherGangPosition;
+        gang = new Gang();
+        DataManager.instance.currentGangState = DataManager.GangState.Idle;
 
-            Radius = SetRadius();
+        memberCount = DataManager.instance.levelData.memberCount;
+        this.transform.position = DataManager.instance.levelData.motherGangPosition;
 
-            CreateMembers();
-        }
+        SetBase();
 
-        SetGangMemberLists();
-        
+        CreateMembers();
+
+        gang.speed = 0.5f;
+        gang.GangWheight = memberCount;
     }
 
-    
+    private void LateUpdate()
+    {
+        if(memberCount != gang.AllGang.Count)
+        {
+            int diff = memberCount - gang.AllGang.Count;
+            //eger member sayisi degistiyse base scale i da degistir
+            UpdateBaseScale(diff);
+
+            memberCount = gang.AllGang.Count;
+            gang.GangWheight = memberCount;
+        }
+
+        if (DataManager.instance.gameState == DataManager.GameState.Play && memberCount == 0)
+        {
+            DataManager.instance.GameOver();
+        }
+    }
+
     void CreateMembers()
     {
-        GangMemberTransforms = ObjectPooler.instance.PooltheObjects(memberToLoad, memberCount, this.transform,true);
+        gang.MovableMembers = new List<GangMember>(memberCount);
 
-        Members = new List<Member>(memberCount);
+        List<Transform> gangTransforms = ObjectPooler.instance.PooltheObjects(memberToLoad, memberCount, this.transform, true);
 
-        foreach(Transform memberTransorm in GangMemberTransforms)
+        for(int i = 0; i < memberCount; i++)
         {
-            Vector3 memberPos = Radius * Random.insideUnitCircle;
-            memberTransorm.transform.position = new Vector3(memberPos.x, memberToLoad.localScale.y / 2f, memberPos.y);
-            Members.Add(memberTransorm.GetComponent<Member>());
+            Transform memT = gangTransforms[i];
+            Member memM = gangTransforms[i].GetComponent<Member>();
+
+            Vector2 basePos = new Vector2(gang.Base.transform.position.x, gang.Base.transform.position.z);
+            Vector2 memberPos = basePos + memM.SetRandomPositionInBase(gang.Base);
+
+            memT.localPosition = new Vector3(memberPos.x, 0f, memberPos.y);
+            memM.SetLock(false);
+
+            gang.MovableMembers.Add(new GangMember(memT,memM));
         }
 
-        //SetGangMemberLists();
+        gang.AllGang = new List<GangMember>();
+        gang.AllGang.AddRange(gang.MovableMembers);
     }
 
-
-    //Decide circle radius which members will instantiate and move
-    float SetRadius()
+    //Gang in altinda yurucegi base i olustur
+    void SetBase()
     {
-        return memberToLoad.localScale.x / 2f * memberCount;
+        float radius = memberToLoad.localScale.x * memberCount / 2f;
+
+        radius = (radius < 7f) ? 7f : radius;
+        
+
+        Transform gangBase = transform.GetChild(0);
+        gangBase.localScale = new Vector3(radius, radius / 2f, radius);
+        gangBase.localPosition = new Vector3(gangBase.transform.localPosition.x, gangBase.transform.localPosition.y + (gangBase.localScale.y), gangBase.transform.localPosition.z);
+
+        GameObject baseHead = new GameObject("BaseHead");
+        baseHead.transform.parent = gangBase;
+        baseHead.transform.localScale = baseHead.transform.localScale * 0.1f;
+
+        baseHead.transform.localPosition = new Vector3(0f, -1, 0.4f);
+
+        gang.Base = gangBase;
+        gang.baseHead = baseHead.transform;
+        gang.Rb = gang.Base.GetComponent<Rigidbody>();
     }
 
-    public void SetGangMemberLists()
+    void UpdateBaseScale(int deadMemberCount)
     {
-        gangMemberAnimators.Clear();
+        float radius = gang.Base.localScale.x - (memberToLoad.localScale.x * deadMemberCount / 4f);
 
-        gangMemberAnimators.AddRange(GetComponentsInChildren<Animator>());
+        radius = (radius < 5f) ? 5f : radius;
+
+        gang.Base.localScale = new Vector3(radius, gang.Base.localScale.y, radius);
+
+        foreach(GangMember mem in gang.AllGang)
+        {
+            mem.member.SetRandomPositionInBase(gang.Base);
+        }
+    }
+
+    public Gang GetGang()
+    {
+        return gang;
     }
 }
 

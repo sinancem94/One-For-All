@@ -6,8 +6,35 @@ public class DataManager
 {
     public static DataManager instance;
 
-    public string ME = "DataManager";
+    string ME = "DataManager";
     public LevelData levelData;
+
+    public UIScript UI;
+
+    //Dynamic LevelData
+    public GangState currentGangState;
+    public MotherGang motherGang;
+
+    private GameState gState;
+    public GameState gameState
+    {
+        get { return gState; }   // get method
+    }
+
+    public enum GameState
+    {
+        Play,
+        End
+    }
+
+    public enum GangState
+    {
+        Idle = 0,
+        Walking,
+        EventLocked,
+        LevelPassed,
+        GameOver
+    };
 
     public DataManager()
     {
@@ -17,19 +44,74 @@ public class DataManager
         }
         else
         {
-           // Debug.LogError(ME + " already exist");
+            Debug.LogError(ME + " already exist");
+
+            instance = this;
         }
 
         LvlData getLevelData;
-        getLevelData = new LvlData(1);
+        //PlayerPrefs.DeleteAll();
+        int level = 1;
+        if (PlayerPrefs.HasKey("Level"))
+            level = PlayerPrefs.GetInt("Level");
+        else
+        {
+            PlayerPrefs.SetInt("Level", level);
+        }
+
+        getLevelData = new LvlData(level);
 
         levelData = getLevelData.GetLevelData();
 
+        SetState(GameState.Play);
+
+        UI = GameObject.FindObjectOfType(typeof(UIScript)) as UIScript;
+        motherGang = GameObject.FindObjectOfType(typeof(MotherGang)) as MotherGang;
+    }
+
+    void SetState(GameState newState)
+    {
+        gState = newState;
+    }
+
+    public void LevelPassed()
+    {
+        SetState(GameState.End);
+
+        Time.timeScale = 0;
+        UI.LevelPassed();
+
+        currentGangState = GangState.LevelPassed;
+
+        resetDataManager();
+    }
+
+    public void GameOver()
+    {
+        SetState(GameState.End);
+
+        Time.timeScale = 0;
+        UI.GameOver();
+
+        currentGangState = GangState.GameOver;
+
+        resetDataManager();
+    }
+
+    void resetDataManager()
+    {
+        
+    }
+
+    public MotherGang.Gang GetGang()
+    {
+        return motherGang.GetGang();
     }
 
     //Current level data
     public struct LevelData
     {
+       public Transform memberToLoad; 
        public Vector3 motherGangPosition; 
        public int memberCount;
     }

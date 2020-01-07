@@ -13,7 +13,7 @@ namespace UtmostInput
             generalInputs = new List<GeneralInput>();
         }
 
-        public bool IsInput()
+        public bool GetInputs()
         {
             ResetEndedInput();
 

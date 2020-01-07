@@ -5,12 +5,18 @@ TagManager:
   serializedVersion: 2
   tags:
   - GangMember
-  - LadderObstacle
-  - UsedObject
   - Ground
-  - WreckingBall
+  - Base
   - FinishLine
-  - BridgeObstacle
+  - PushableObject
+  - Obstacle
+  - PassableObstacle
+  - Wall
+  - WreckingBall
+  - Squasher
+  - IdleMemberGroup
+  - PushableSpace
+  - HouseObstacle
   layers:
   - Default
   - TransparentFX
@@ -20,18 +26,18 @@ TagManager:
   - UI
   - 
   - 
-  - Gang Member
-  - Used Object
-  - Wrecking Ball
+  - GangMember
+  - Squasher
+  - WreckingBall
   - Finish Line
-  - BridgeObstacle
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
+  - Obstacle
+  - Wall
+  - Base
+  - PushableObject
+  - PassableObstacle
+  - IdleMemberGroup
+  - PushableSpace
+  - Ground
   - 
   - 
   - 

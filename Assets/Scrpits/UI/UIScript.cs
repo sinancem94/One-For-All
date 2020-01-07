@@ -7,22 +7,30 @@ public class UIScript : MonoBehaviour
 {
     public GameObject gameOverPanel;
     public GameObject levelPassedPanel;
+    public GameObject chooseLevelPanel;
 
     void Start()
     {
         gameOverPanel.SetActive(false);
         levelPassedPanel.SetActive(false);
+        chooseLevelPanel.SetActive(false);
     }
 
     public void GameOver()
     {
         gameOverPanel.SetActive(true);
-        Time.timeScale = 0;
     }
 
     public void LevelPassed()
     {
         levelPassedPanel.SetActive(true);
-        Time.timeScale = 0;
+    }
+
+    public void OpenLevelPanel()
+    {
+        levelPassedPanel.SetActive(false);
+        gameOverPanel.SetActive(false);
+
+        chooseLevelPanel.SetActive(true);
     }
 }
