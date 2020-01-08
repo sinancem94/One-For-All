@@ -9,7 +9,7 @@ public class Member : MonoBehaviour
 
     public Rigidbody memRb;
     public Animator memAnim;
-
+   
     //member larin hareketini saglamak icin mutex. eger tirmanma veya kopru gecme vs islemindeyse lock la yoksa acik dursun
     bool memberLock;
 
@@ -22,6 +22,8 @@ public class Member : MonoBehaviour
     bool isWalking = false;
 
     List<Transform> pushingSquashers;
+
+    
 
     void Start()
     {
@@ -175,12 +177,24 @@ public class Member : MonoBehaviour
     {
         isWalking = true;
         memAnim.SetBool("isWalking", true);
+        GetComponentInChildren<ParticleSystem>().Play();
     }
 
     void StopWalkingAnimation()
     {
         isWalking = false;
         memAnim.SetBool("isWalking", false);
+        GetComponentInChildren<ParticleSystem>().Stop();
+    }
+
+    void StartPushingAnimation()
+    {
+        memAnim.SetBool("isPushing", true);
+    }
+
+    void StopPushingAnimation()
+    {
+        memAnim.SetBool("isPushing", false);
     }
 
     //eger olduyse cagir beni
@@ -277,6 +291,7 @@ public class Member : MonoBehaviour
         else if (otherCollider.gameObject.CompareTag("Wall") || otherCollider.gameObject.CompareTag("PushableObject"))
         {
             RandomPosInBase = DataManager.instance.GetGang().Base.position -  transform.position; //SetRandomPositionInBase(DataManager.instance.GetGang().Base);
+            StartPushingAnimation();
         }
     }
 
@@ -295,6 +310,7 @@ public class Member : MonoBehaviour
         if (collision.gameObject.CompareTag("Wall") || collision.gameObject.CompareTag("PushableObject"))
         {
             RandomPosInBase = SetRandomPositionInBase(DataManager.instance.GetGang().Base);
+            StopPushingAnimation();
         }
         else if(collision.gameObject.CompareTag("Squasher"))
         {
@@ -305,5 +321,6 @@ public class Member : MonoBehaviour
 
             RandomPosInBase = SetRandomPositionInBase(DataManager.instance.GetGang().Base);
         }
+       
     }
 }
