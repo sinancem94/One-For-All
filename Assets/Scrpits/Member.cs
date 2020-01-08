@@ -218,7 +218,7 @@ public class Member : MonoBehaviour
             DataManager.instance.GetGang().AllGang.Remove(member);
         }
 
-        this.GetComponent<Member>().enabled = false;
+        this.enabled = false;
     }
     
     Vector3 SetNewPosition(Transform gangBase)

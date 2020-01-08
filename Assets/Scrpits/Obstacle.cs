@@ -28,6 +28,9 @@ public class Obstacle : MonoBehaviour
     //Ladder, bridge etc nin en son memberin pozisyonu 
     public Vector3 passEndPosition;
 
+    //asagi yukari ya da ileri geri pass den cikarken start ve end pozisyonlari degistirebilmek icin. transform ortasi yerine bu degeri kullanmak lazim.
+    Vector3 passMiddlePosition;
+
     private void Start()
     {
         coll = gameObject.GetComponent<BoxCollider>();
@@ -78,6 +81,8 @@ public class Obstacle : MonoBehaviour
         this.passStartPosition = passStartPos;
         this.passEndPosition = passEndPos;
 
+        passMiddlePosition = (passEndPos + passStartPos) / 2f;
+
     }
 
     //eger gang pass in oldugu pozisyona yakinsa ve usedObstacle a carpiyorsa true don
@@ -111,47 +116,38 @@ public class Obstacle : MonoBehaviour
         //calculate starting position and ending position if obstacle is a bridge look at z positions
         if (ObstacleType == Obstacle.Type.Bridge)
         {
-            if (DataManager.instance.GetGang().Base.position.z < this.transform.position.z)
+            if (DataManager.instance.GetGang().Base.position.z < passMiddlePosition.z)
                 direction = 1;
             else
                 direction = -1;
 
-            if (passStartPosition.z > passEndPosition.z && direction == 1)
+            if ((passStartPosition.z > passEndPosition.z && direction == 1) || (passStartPosition.z < passEndPosition.z && direction != 1))
             {
-                Vector3 tmpPos = passStartPosition;
-                passStartPosition = passEndPosition;
-                passEndPosition = tmpPos;
-            }
-            else if (passStartPosition.z < passEndPosition.z && direction != 1)
-            {
-                Vector3 tmpPos = passStartPosition;
-                passStartPosition = passEndPosition;
-                passEndPosition = tmpPos;
+                SwitchStartEndPositions();
             }
         }
         //calculate starting position and ending position if obstacle is a ladder look at y positions
         else if (ObstacleType == Obstacle.Type.Ladder)
         {
 
-            if (DataManager.instance.GetGang().Base.position.y < this.transform.position.y)
+            if (DataManager.instance.GetGang().Base.position.y < passMiddlePosition.y)
                 direction = 1;
             else
                 direction = -1;
 
-            if (passStartPosition.y > passEndPosition.y && direction == 1)
+            if ((passStartPosition.y > passEndPosition.y && direction == 1) || (passStartPosition.y < passEndPosition.y && direction != 1))
             {
-                Vector3 tmpPos = passStartPosition;
-                passStartPosition = passEndPosition;
-                passEndPosition = tmpPos;
-            }
-            else if (passStartPosition.y < passEndPosition.y && direction != 1)
-            {
-                Vector3 tmpPos = passStartPosition;
-                passStartPosition = passEndPosition;
-                passEndPosition = tmpPos;
+                SwitchStartEndPositions();
             }
         }
 
         return direction;
+    }
+
+    void SwitchStartEndPositions()
+    {
+        Vector3 tmpPos = passStartPosition;
+        passStartPosition = passEndPosition;
+        passEndPosition = tmpPos;
     }
 }
