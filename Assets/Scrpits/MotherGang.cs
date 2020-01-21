@@ -141,13 +141,9 @@ public class MotherGang : MonoBehaviour
     {
         return gang;
     }
+
+
 }
-
-
-
-
-
-
 
 
 

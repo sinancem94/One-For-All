@@ -6,6 +6,7 @@ public class GameInitiliazer : MonoBehaviour
 {
     static GameInitiliazer Initialization;
 
+   
     CameraSizeHandler camSizeHandler;
     void Start()
     {
@@ -28,7 +29,4 @@ public class GameInitiliazer : MonoBehaviour
         camSizeHandler = new CameraSizeHandler();
         camSizeHandler.SetCameraFieldOfView(Camera.main);
     }
-
-
-    
 }
