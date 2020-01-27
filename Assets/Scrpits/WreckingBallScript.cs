@@ -14,10 +14,10 @@ public class WreckingBallScript : MonoBehaviour
 
     void Start()
     {
-        to = new Vector3(-20f, 90f, 0f);
-        from = new Vector3(-160f, 90f, 0f);
+        to = new Vector3(-23f, 90f, 0f);
+        from = new Vector3(20f, 90f, 0f);
 
-        radiance = Mathf.Abs(to.x + from.x) / 360f;
+        radiance = 0.5f; //Mathf.Abs(to.x + from.x) / 360f;
     }
 
     void Update()
