@@ -23,8 +23,6 @@ public class Member : MonoBehaviour
 
     List<Transform> pushingSquashers;
 
-    
-
     void Start()
     {
         memRb = GetComponent<Rigidbody>();
@@ -49,7 +47,7 @@ public class Member : MonoBehaviour
             MoveTowards(positionInBase);
 
             if (DidWalked() && !isWalking)
-                StartWalkingAnimation();
+                StartCoroutine(StartWalkingAnimation());
             else if (!DidWalked() && isWalking)
                 StopWalkingAnimation();
 
@@ -173,9 +171,13 @@ public class Member : MonoBehaviour
         return false;
     }
 
-    void StartWalkingAnimation()
+    IEnumerator StartWalkingAnimation()
     {
+        float randomLatency = UnityEngine.Random.Range(0, 0.3f);
+        yield return new WaitForSecondsRealtime(randomLatency);
+
         isWalking = true;
+        
         memAnim.SetBool("isWalking", true);
         GetComponentInChildren<ParticleSystem>().Play();
     }
@@ -183,6 +185,7 @@ public class Member : MonoBehaviour
     void StopWalkingAnimation()
     {
         isWalking = false;
+       
         memAnim.SetBool("isWalking", false);
         GetComponentInChildren<ParticleSystem>().Stop();
     }
